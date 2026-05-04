@@ -35,7 +35,10 @@ export default function Dashboard() {
 
       {/* Hero Section */}
       <section className="relative flex flex-col justify-end pt-20 pb-8 px-6 md:px-12 border-b border-primary/20">
-        <div className="absolute inset-0 bg-[url('/mountain-bg.jpg')] bg-cover bg-center bg-fixed opacity-50 mix-blend-luminosity grayscale" />
+        <div 
+          className="absolute inset-0 bg-[url('/mountain-bg.jpg')] bg-cover bg-center bg-fixed opacity-50 mix-blend-luminosity grayscale" 
+          style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 40%, transparent 100%)' }}
+        />
         <div className="absolute inset-0 bg-gradient-hero" />
         
         <div className="relative z-10 w-full max-w-[1600px] mx-auto flex items-end justify-between">

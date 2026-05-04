@@ -8,6 +8,7 @@ import { CurrencyProvider } from "@/lib/currency-context";
 import { DashboardProvider } from "@/lib/dashboard-context";
 import { ExpensesProvider } from "@/lib/expenses-context";
 import Dashboard from "./pages/Dashboard.tsx";
+import Login from "./pages/Login.tsx";
 import Expenses from "./pages/Expenses.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Settings from "./pages/Settings.tsx";
@@ -25,6 +26,7 @@ const App = () => (
             <ExpensesProvider>
               <BrowserRouter>
                 <Routes>
+                  <Route path="/login" element={<Login />} />
                   <Route path="/" element={<Dashboard />} />
                   <Route path="/expenses" element={<Expenses />} />
                   <Route path="/settings" element={<Settings />} />
