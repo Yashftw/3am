@@ -5,14 +5,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { UserProvider } from "@/lib/user-context";
 import { CurrencyProvider } from "@/lib/currency-context";
-import { PortfolioProvider } from "@/lib/portfolio-context";
+import { DashboardProvider } from "@/lib/dashboard-context";
 import { ExpensesProvider } from "@/lib/expenses-context";
+import Dashboard from "./pages/Dashboard.tsx";
 import Expenses from "./pages/Expenses.tsx";
-import Portfolio from "./pages/Portfolio.tsx";
-import Markets from "./pages/Markets.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Settings from "./pages/Settings.tsx";
-import Watchlist from "./pages/Watchlist.tsx";
 
 const queryClient = new QueryClient();
 
@@ -23,20 +21,18 @@ const App = () => (
       <Sonner />
       <UserProvider>
         <CurrencyProvider>
-          <PortfolioProvider>
+          <DashboardProvider>
             <ExpensesProvider>
               <BrowserRouter>
                 <Routes>
-                  <Route path="/" element={<Expenses />} />
-                  <Route path="/portfolio" element={<Portfolio />} />
-                  <Route path="/markets" element={<Markets />} />
-                  <Route path="/watchlist" element={<Watchlist />} />
+                  <Route path="/" element={<Dashboard />} />
+                  <Route path="/expenses" element={<Expenses />} />
                   <Route path="/settings" element={<Settings />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
             </ExpensesProvider>
-          </PortfolioProvider>
+          </DashboardProvider>
         </CurrencyProvider>
       </UserProvider>
     </TooltipProvider>

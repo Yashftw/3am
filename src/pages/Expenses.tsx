@@ -10,16 +10,13 @@ import { WeeklyChart } from "@/components/expenses/WeeklyChart";
 import { CategoryChart } from "@/components/expenses/CategoryChart";
 import { ExpenseList } from "@/components/expenses/ExpenseList";
 import { BudgetPanel } from "@/components/expenses/BudgetPanel";
-import { usePortfolio } from "@/lib/portfolio-context";
 import { useCurrency } from "@/lib/currency-context";
 import { useUser } from "@/lib/user-context";
 import { Button } from "@/components/ui/button";
 
 const Expenses = () => {
-  const { totalValue, dayChangePercent } = usePortfolio();
   const { currency, setCurrency, formatAmount } = useCurrency();
   const { username } = useUser();
-  const dayPositive = dayChangePercent >= 0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,47 +80,6 @@ const Expenses = () => {
           <BudgetPanel />
         </div>
 
-        {/* Portfolio Side Objective Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.5 }}
-          className="glass-card rounded-sm p-8 md:p-10 shadow-elegant relative overflow-hidden"
-        >
-          <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-accent opacity-10 blur-3xl rounded-full" />
-
-          <div className="relative grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div>
-              <p className="text-xs uppercase tracking-[0.3em] text-accent mb-3 mono-font">
-                ◆ Side Objective
-              </p>
-              <h2 className="display-font text-4xl md:text-5xl mb-4">Investment Portfolio</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Your long-game capital, tracked separately from daily spend.
-              </p>
-            </div>
-
-            <div className="flex items-center justify-end gap-8">
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-2">Net Worth</p>
-                <p className="text-3xl font-bold mono-font">{formatAmount(totalValue, 0)}</p>
-              </div>
-              <div>
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-2">24h</p>
-                <p className={`text-3xl font-bold mono-font ${dayPositive ? "text-success" : "text-destructive"}`}>
-                  {dayPositive ? <ArrowUpRight className="inline h-6 w-6" /> : <ArrowDownRight className="inline h-6 w-6" />}
-                  {dayPositive ? "+" : ""}{dayChangePercent.toFixed(2)}%
-                </p>
-              </div>
-              <Link
-                to="/portfolio"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-sm hover:bg-primary/90 transition-colors uppercase tracking-[0.2em] text-xs font-semibold"
-              >
-                View <ArrowUpRight className="h-4 w-4" />
-              </Link>
-            </div>
-          </div>
-        </motion.div>
       </main>
 
       <footer className="border-t border-border px-6 md:px-12 py-10 mt-16">

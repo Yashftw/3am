@@ -39,7 +39,7 @@ export const ExpenseSummary = () => {
         <div className="bg-background/40 p-4 rounded-lg border border-border/50">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground mb-3 flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-primary" />
-            Total Income
+            Total Funds
           </p>
           <div className="flex items-center">
             <Input
@@ -56,7 +56,7 @@ export const ExpenseSummary = () => {
             />
           </div>
           <div className="mt-3 text-xs text-muted-foreground/70 leading-relaxed">
-            Set this first to track how much of your monthly pool remains.
+            Set this to track how much of your total funds remain.
           </div>
         </div>
 
@@ -73,7 +73,7 @@ export const ExpenseSummary = () => {
               />
             </div>
             <p className="text-xs text-muted-foreground mono-font">
-              {spentPct.toFixed(1)}% of {formatAmount(totalAvailable, 0)} {income > 0 ? "income" : "budget"}
+              {spentPct.toFixed(1)}% of {formatAmount(totalAvailable, 0)} {income > 0 ? "funds" : "budget"}
             </p>
           </div>
         </div>
