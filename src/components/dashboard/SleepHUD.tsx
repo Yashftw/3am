@@ -34,10 +34,10 @@ export const SleepHUD = () => {
 
   const getColor = (h: number) => {
     if (h === 0) return "#1e293b"; // empty
-    if (h < 6) return "#404040"; // dark gray
-    if (h < 7) return "#808080"; // mid gray
-    if (h <= 9) return "#ffffff"; // white
-    return "#b0b0b0"; // light gray
+    if (h < 6) return "#475569"; // slate-600
+    if (h < 7) return "#94a3b8"; // slate-400
+    if (h <= 9) return "#93c5fd"; // soft blue
+    return "#cbd5e1"; // light slate
   };
 
   const handleLog = (e: React.FormEvent) => {
@@ -52,14 +52,14 @@ export const SleepHUD = () => {
   };
 
   return (
-    <div className={`glass-card rounded-none p-6 relative group flex flex-col h-full ${isFlashing ? 'animate-flash' : ''}`}>
+    <div className={`glass-card rounded-sm p-6 relative group flex flex-col h-full transition-opacity ${isFlashing ? 'opacity-50' : ''}`}>
       <div className="flex items-center gap-3 mb-6">
-        <div className="hud-badge w-10 h-10 border-white/30 text-white">
+        <div className="hud-badge w-10 h-10 border-white/20 text-white rounded-sm">
           <Moon className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-xl text-white text-shadow-glow">SYS_SLEEP_TRK</h2>
-          <p className="text-[10px] text-muted-foreground uppercase mono-font tracking-widest">Biometric Monitoring</p>
+          <h2 className="text-xl font-display text-white">Sleep</h2>
+          <p className="text-xs text-muted-foreground">Rest Monitoring</p>
         </div>
       </div>
 
@@ -87,17 +87,17 @@ export const SleepHUD = () => {
 
         {/* Quick Stats */}
         <div className="flex-1 grid grid-cols-2 gap-2">
-          <div className="bg-black/40 border border-white/10 p-2 flex flex-col justify-center">
-            <span className="text-[10px] text-muted-foreground uppercase mono-font">7D Avg</span>
-            <span className="display-font text-lg text-white">{weeklyAvg.toFixed(1)}<span className="text-xs">h</span></span>
+          <div className="bg-[#121212] border border-white/5 rounded-sm p-2 flex flex-col justify-center">
+            <span className="text-xs text-muted-foreground">7D Avg</span>
+            <span className="text-lg font-medium text-white">{weeklyAvg.toFixed(1)}<span className="text-xs">h</span></span>
           </div>
-          <div className="bg-black/40 border border-white/10 p-2 flex flex-col justify-center">
-            <span className="text-[10px] text-muted-foreground uppercase mono-font">Best</span>
-            <span className="display-font text-lg text-white">{bestNight.toFixed(1)}<span className="text-xs">h</span></span>
+          <div className="bg-[#121212] border border-white/5 rounded-sm p-2 flex flex-col justify-center">
+            <span className="text-xs text-muted-foreground">Best</span>
+            <span className="text-lg font-medium text-white">{bestNight.toFixed(1)}<span className="text-xs">h</span></span>
           </div>
-          <div className="bg-black/40 border border-white/10 p-2 col-span-2 flex flex-col justify-center relative overflow-hidden">
-            <span className="text-[10px] text-muted-foreground uppercase mono-font">Weekly Delta</span>
-            <span className={`display-font text-lg ${sleepDebt > 0 ? 'text-white/50' : 'text-white'}`}>
+          <div className="bg-[#121212] border border-white/5 rounded-sm p-2 col-span-2 flex flex-col justify-center relative overflow-hidden">
+            <span className="text-xs text-muted-foreground">Weekly Delta</span>
+            <span className={`text-lg font-medium ${sleepDebt > 0 ? 'text-white/50' : 'text-white'}`}>
               {sleepDebt > 0 ? '-' : '+'}{Math.abs(sleepDebt).toFixed(1)}<span className="text-xs">h</span>
             </span>
           </div>
@@ -134,10 +134,10 @@ export const SleepHUD = () => {
           <input
             type="number"
             step="0.5"
-            placeholder="HOURS SLEPT"
+            placeholder="Hours slept"
             value={hoursInput}
             onChange={(e) => setHoursInput(e.target.value)}
-            className="hud-input flex-1 px-3 py-2 outline-none mono-font text-sm uppercase placeholder:text-white/30"
+            className="hud-input flex-1 px-3 py-2 text-sm"
           />
           <button type="submit" className="hud-button px-4 py-2">LOG</button>
         </form>

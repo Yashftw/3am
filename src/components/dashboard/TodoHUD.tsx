@@ -3,9 +3,9 @@ import { useDashboard, PriorityLevel } from "@/lib/dashboard-context";
 import { ListChecks, Trash2 } from "lucide-react";
 
 const PRIORITY_COLORS: Record<PriorityLevel, string> = {
-  P1: "#ffffff",
-  P2: "#a0a0a0",
-  P3: "#606060",
+  P1: "#fca5a5", // soft red
+  P2: "#fde047", // soft yellow
+  P3: "#cbd5e1", // slate
 };
 
 export const TodoHUD = () => {
@@ -44,22 +44,22 @@ export const TodoHUD = () => {
   });
 
   return (
-    <div className="glass-card rounded-none p-6 relative group flex flex-col h-full">
+    <div className="glass-card rounded-sm p-6 relative group flex flex-col h-full">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="hud-badge w-10 h-10 border-white/30 text-white">
+          <div className="hud-badge w-10 h-10 border-white/20 text-white rounded-sm">
             <ListChecks className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl text-white text-shadow-glow">SYS_TSK_QUEUE</h2>
-            <p className="text-[10px] text-muted-foreground uppercase mono-font tracking-widest">Operational Tasks</p>
+            <h2 className="text-xl font-display text-white">Tasks</h2>
+            <p className="text-xs text-muted-foreground">Operational Queue</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-black/40 border border-white/10 px-3 py-1">
+        <div className="flex items-center gap-3 bg-[#121212] border border-white/5 rounded-sm px-3 py-2">
           <div className="flex flex-col items-end">
-            <span className="mono-font text-[10px] text-muted-foreground uppercase">Day Cycle</span>
-            <span className="mono-font text-xs font-bold text-white">{completedToday}/{totalToday}</span>
+            <span className="text-xs text-muted-foreground">Today</span>
+            <span className="text-sm font-medium text-white">{completedToday}/{totalToday}</span>
           </div>
           <div className="relative w-8 h-8">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 50 50">
@@ -84,8 +84,8 @@ export const TodoHUD = () => {
 
       <div className="flex-1 overflow-auto no-scrollbar space-y-2 mb-6 max-h-[300px] pr-2">
         {sortedTodos.length === 0 ? (
-          <div className="h-full flex items-center justify-center border border-dashed border-white/20">
-            <span className="mono-font text-xs text-white/50 uppercase">Task queue empty</span>
+          <div className="h-full flex items-center justify-center border border-dashed border-white/10 rounded-sm">
+            <span className="text-sm text-muted-foreground">Task queue empty</span>
           </div>
         ) : (
           sortedTodos.map((t) => {
@@ -93,12 +93,12 @@ export const TodoHUD = () => {
             return (
               <div 
                 key={t.id} 
-                className={`flex items-stretch bg-black/50 border border-white/10 group/todo cursor-pointer transition-all hover:bg-black/80
-                  ${overdue ? 'bg-white/5 border-white/30' : ''}`}
+                className={`flex items-stretch bg-[#121212] border border-white/5 rounded-sm group/todo cursor-pointer transition-all hover:border-white/20
+                  ${overdue ? 'border-red-500/30' : ''}`}
                 onClick={() => toggleTodo(t.id)}
               >
                 <div 
-                  className="w-1.5 shrink-0 transition-colors" 
+                  className="w-1.5 shrink-0 transition-colors rounded-l-sm" 
                   style={{ backgroundColor: t.completed ? '#333333' : PRIORITY_COLORS[t.priority] }} 
                 />
                 
@@ -107,9 +107,9 @@ export const TodoHUD = () => {
                     <span className={`text-sm font-medium truncate ${t.completed ? 'text-muted-foreground animate-strikethrough' : 'text-foreground'}`}>
                       {t.text}
                     </span>
-                    <span className="text-[9px] mono-font mt-1 opacity-50 uppercase flex justify-between">
-                      {overdue && !t.completed ? <span className="text-white font-bold">OVERDUE</span> : <span>LOGGED: {new Date(t.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>}
-                      {t.completed && t.completedAt && <span className="text-white">DONE: {new Date(t.completedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>}
+                    <span className="text-[10px] text-muted-foreground mt-1 flex justify-between">
+                      {overdue && !t.completed ? <span className="text-red-400">Overdue</span> : <span>Logged: {new Date(t.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>}
+                      {t.completed && t.completedAt && <span className="text-white/70">Done: {new Date(t.completedAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>}
                     </span>
                   </div>
                   
@@ -131,7 +131,7 @@ export const TodoHUD = () => {
           <select 
             value={priority} 
             onChange={e => setPriority(e.target.value as PriorityLevel)}
-            className="hud-input w-20 px-2 py-2 outline-none mono-font text-[10px] uppercase font-bold text-center"
+            className="hud-input w-16 px-2 py-2 text-xs font-medium text-center"
             style={{ color: PRIORITY_COLORS[priority] }}
           >
             <option value="P1">P1</option>
@@ -140,12 +140,12 @@ export const TodoHUD = () => {
           </select>
           <input
             type="text"
-            placeholder="ADD NEW TASK..."
+            placeholder="Add new task..."
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
-            className="hud-input flex-1 px-3 py-2 outline-none mono-font text-xs uppercase placeholder:text-white/30"
+            className="hud-input flex-1 px-3 py-2 text-sm"
           />
-          <button type="submit" className="hud-button px-4 py-2">ADD</button>
+          <button type="submit" className="hud-button px-4 py-2">Add</button>
         </form>
       </div>
     </div>

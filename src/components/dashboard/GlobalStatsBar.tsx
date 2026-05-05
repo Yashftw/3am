@@ -26,8 +26,8 @@ export const GlobalStatsBar = () => {
   const activeGoals = goals.filter(g => !g.completed).length;
 
   return (
-    <div className="w-full border-y border-white/10 bg-black/40 py-3 overflow-x-auto no-scrollbar">
-      <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center gap-8 md:gap-16 min-w-max text-xs uppercase tracking-widest mono-font text-muted-foreground">
+    <div className="w-full border-y border-white/5 bg-[#0a0a0a] py-3 overflow-x-auto no-scrollbar">
+      <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center gap-8 md:gap-16 min-w-max text-sm text-muted-foreground">
         
         <div className="flex items-center gap-2">
           <span>Streak: <span className="text-white font-bold">{streak} days</span></span>

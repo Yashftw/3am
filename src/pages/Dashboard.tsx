@@ -31,24 +31,17 @@ export default function Dashboard() {
   return (
     <div className="flex-1 flex flex-col relative z-10">
       {/* Hero Section */}
-      <section className="relative flex flex-col justify-end pt-20 pb-8 px-6 md:px-12 border-b border-white/10">
-        <div className="absolute inset-0 bg-gradient-hero pointer-events-none" />
-        
+      <section className="relative flex flex-col justify-end pt-12 pb-6 px-6 md:px-12 border-b border-white/5 bg-[#0a0a0a]">
         <div className="relative z-10 w-full max-w-[1600px] mx-auto flex items-end justify-between">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <div className="flex items-center gap-3 mb-2 opacity-80">
-              <span className="w-2 h-2 bg-white animate-pulse" />
-              <p className="mono-font text-[10px] uppercase tracking-[0.3em] text-white/70">
-                Operator: {username} // Access Granted
-              </p>
-            </div>
-            <h1 className="display-font text-5xl md:text-7xl lg:text-8xl text-transparent bg-clip-text bg-gradient-to-b from-white to-white/50 filter drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">
-              WELCOME, {username.toUpperCase()}
+            <h1 className="font-display text-4xl md:text-5xl lg:text-6xl text-foreground font-light tracking-tight">
+              Hello, {username}
             </h1>
+            <p className="text-sm text-muted-foreground mt-2">Here's your overview</p>
           </motion.div>
 
           <motion.div
@@ -57,9 +50,8 @@ export default function Dashboard() {
             transition={{ duration: 1, delay: 0.5 }}
             className="hidden md:flex flex-col items-end"
           >
-            <p className="mono-font text-[10px] text-white/70 uppercase tracking-widest">Current Cycle</p>
-            <h2 className="display-font text-2xl lg:text-4xl text-white">
-              {new Date().toLocaleDateString("en-US", { weekday: 'long' }).toUpperCase()} · {new Date().toLocaleDateString("en-US", { month: 'short', day: '2-digit' }).toUpperCase()}
+            <h2 className="font-display text-xl text-muted-foreground">
+              {new Date().toLocaleDateString("en-US", { weekday: 'long' })} · {new Date().toLocaleDateString("en-US", { month: 'short', day: '2-digit' })}
             </h2>
           </motion.div>
         </div>
@@ -70,36 +62,31 @@ export default function Dashboard() {
       <main className="flex-1 relative px-6 md:px-12 py-8 max-w-[1600px] w-full mx-auto z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
           
-          <motion.div custom={1} initial="hidden" animate="visible" variants={cardVariants} className="h-[450px]">
+          <motion.div custom={1} initial="hidden" animate="visible" variants={cardVariants} className="min-h-[350px]">
             <SleepHUD />
           </motion.div>
           
-          <motion.div custom={2} initial="hidden" animate="visible" variants={cardVariants} className="h-[450px]">
+          <motion.div custom={2} initial="hidden" animate="visible" variants={cardVariants} className="min-h-[350px]">
             <WorkoutHUD />
           </motion.div>
           
-          <motion.div custom={3} initial="hidden" animate="visible" variants={cardVariants} className="h-[450px]">
+          <motion.div custom={3} initial="hidden" animate="visible" variants={cardVariants} className="min-h-[350px]">
             <GoalsHUD />
           </motion.div>
           
-          <motion.div custom={4} initial="hidden" animate="visible" variants={cardVariants} className="h-[450px]">
+          <motion.div custom={4} initial="hidden" animate="visible" variants={cardVariants} className="min-h-[350px]">
             <TodoHUD />
           </motion.div>
 
         </div>
       </main>
 
-      <footer className="border-t border-white/10 px-6 md:px-12 py-6 bg-black/40 backdrop-blur-sm mt-auto relative z-10">
-        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-[10px] mono-font text-white/50 uppercase tracking-widest">
+      <footer className="border-t border-white/5 px-6 md:px-12 py-6 bg-[#0a0a0a] mt-auto relative z-10">
+        <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-sans text-muted-foreground">
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-              SYSTEM ONLINE
-            </span>
-            <span>|</span>
-            <span>DATA ENCRYPTED: LOCAL_STORAGE_V2</span>
+            <span>© 2026 NORTH</span>
           </div>
-          <span className="text-white/40">LAST SYNC: [{lastSync}]</span>
+          <span className="text-white/40">Last sync: {lastSync}</span>
         </div>
       </footer>
     </div>

@@ -15,12 +15,7 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
 export const Layout = () => {
   return (
-    <div className="min-h-screen flex flex-col relative">
-      {/* Global Mountain to Grid Transition Background */}
-      <div 
-        className="absolute inset-0 bg-[url('/mountain-bg.jpg')] bg-cover bg-center bg-fixed opacity-30 mix-blend-luminosity grayscale pointer-events-none z-0 h-[600px]" 
-        style={{ WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)', maskImage: 'linear-gradient(to bottom, black 20%, transparent 100%)' }}
-      />
+    <div className="min-h-screen flex flex-col relative bg-[#0a0a0a] text-foreground">
       
       <SiteNav />
       

@@ -14,14 +14,14 @@ export const WeeklyChart = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.2 }}
-      className="glass-card rounded-sm shadow-elegant overflow-hidden"
+      className="bg-[#121212] border border-white/5 rounded-sm shadow-sm overflow-hidden"
     >
-      <div className="px-6 md:px-8 py-6 border-b border-border flex items-center justify-between">
+      <div className="px-6 md:px-8 py-6 border-b border-white/5 flex items-center justify-between">
         <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Last 7 days</p>
-          <h2 className="display-font text-2xl mt-1">Daily Spending</h2>
+          <h2 className="font-display text-xl">Daily Spending</h2>
+          <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
         </div>
-        <span className="mono-font text-xs text-muted-foreground">PEAK {formatAmount(maxValue, 0)}</span>
+        <span className="font-mono text-xs text-muted-foreground">PEAK {formatAmount(maxValue, 0)}</span>
       </div>
 
       <div className="p-6 md:p-8">
@@ -47,10 +47,10 @@ export const WeeklyChart = () => {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "#1a1a1a",
+                border: "1px solid rgba(255, 255, 255, 0.1)",
                 borderRadius: "0.125rem",
-                fontFamily: "JetBrains Mono, monospace",
+                fontFamily: "Inter, sans-serif",
               }}
               formatter={(value: number) => [formatAmount(value, 0), "Spent"]}
             />

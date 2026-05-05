@@ -14,11 +14,11 @@ export const CategoryChart = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.3 }}
-      className="glass-card rounded-sm shadow-elegant overflow-hidden"
+      className="bg-[#121212] border border-white/5 rounded-sm shadow-sm overflow-hidden"
     >
-      <div className="px-6 md:px-8 py-6 border-b border-border">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Distribution</p>
-        <h2 className="display-font text-2xl mt-1">By Category</h2>
+      <div className="px-6 md:px-8 py-6 border-b border-white/5">
+        <h2 className="font-display text-xl">By Category</h2>
+        <p className="text-xs text-muted-foreground mt-1">Distribution</p>
       </div>
 
       <div className="p-6 md:p-8">
@@ -50,8 +50,8 @@ export const CategoryChart = () => {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Total</p>
-                <p className="text-3xl font-bold mono-font">{formatAmount(monthTotal, 0)}</p>
+                <p className="text-3xl font-medium">{formatAmount(monthTotal, 0)}</p>
+                <p className="text-xs text-muted-foreground mt-1">Total</p>
               </div>
             </div>
 

@@ -39,11 +39,11 @@ export const AddExpenseForm = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.1 }}
-      className="glass-card rounded-sm shadow-elegant overflow-hidden"
+      className="bg-[#121212] border border-white/5 rounded-sm shadow-sm overflow-hidden"
     >
-      <div className="px-6 md:px-8 py-6 border-b border-border">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Quick Add</p>
-        <h2 className="display-font text-2xl mt-1">New Expense</h2>
+      <div className="px-6 md:px-8 py-6 border-b border-white/5">
+        <h2 className="font-display text-xl">New Expense</h2>
+        <p className="text-xs text-muted-foreground mt-1">Quick Add</p>
       </div>
 
       <form onSubmit={handleSubmit} className="p-6 md:p-8">
@@ -55,7 +55,7 @@ export const AddExpenseForm = () => {
               placeholder="0.00"
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
-              className="mono-font"
+              className="font-mono bg-[#1a1a1a] border-white/10 h-10"
               required
             />
           </div>
@@ -64,7 +64,7 @@ export const AddExpenseForm = () => {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value as any)}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="flex h-10 w-full rounded-sm border border-white/10 bg-[#1a1a1a] px-3 py-2 text-sm focus-visible:outline-none focus-visible:border-white/20 text-white"
             >
               {CATEGORIES.map((cat) => (
                 <option key={cat.name} value={cat.name}>
@@ -80,6 +80,7 @@ export const AddExpenseForm = () => {
               placeholder="Note..."
               value={note}
               onChange={(e) => setNote(e.target.value)}
+              className="bg-[#1a1a1a] border-white/10 h-10"
             />
           </div>
 
@@ -88,7 +89,7 @@ export const AddExpenseForm = () => {
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="mono-font"
+              className="font-mono bg-[#1a1a1a] border-white/10 h-10"
               required
             />
           </div>

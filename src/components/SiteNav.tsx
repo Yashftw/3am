@@ -19,24 +19,26 @@ export const SiteNav = () => {
   }, []);
 
   return (
-    <header className="relative z-20 px-6 md:px-12 py-4 flex items-center justify-between border-b border-white/10 bg-background/90 backdrop-blur-md sticky top-0">
+    <header className="relative z-20 px-6 md:px-12 py-4 flex items-center justify-between border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-md sticky top-0">
       <NavLink to="/" className="flex items-center gap-3 group">
-        <div className="h-2 w-2 bg-white animate-pulse shadow-[0_0_10px_#ffffff]" />
-        <span className="display-font text-xl tracking-[0.2em] text-foreground group-hover:text-white transition-colors">
-          NORTH<span className="text-white opacity-50">_OS</span>
+        <div className="w-6 h-6 border-[1.5px] border-foreground rounded-full flex items-center justify-center relative transition-colors group-hover:border-white">
+          <div className="w-full h-[1.5px] bg-foreground absolute rotate-45 transform transition-colors group-hover:bg-white" />
+        </div>
+        <span className="font-display text-lg tracking-widest text-foreground group-hover:text-white transition-colors">
+          NORTH
         </span>
       </NavLink>
-      <nav className="hidden md:flex items-center gap-8 text-xs uppercase tracking-[0.2em] font-bold">
+      <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
         {links.map((l) => (
           <NavLink
             key={l.to}
             to={l.to}
             end={l.to === "/"}
             className={({ isActive }) =>
-              `transition-all duration-300 relative px-2 py-1 ${
+              `transition-all duration-300 relative py-1 ${
                 isActive 
-                  ? "text-white border-b border-white text-shadow-glow" 
-                  : "text-muted-foreground hover:text-white hover:border-b hover:border-white/50"
+                  ? "text-white" 
+                  : "text-muted-foreground hover:text-white"
               }`
             }
           >
@@ -45,12 +47,12 @@ export const SiteNav = () => {
         ))}
       </nav>
       <div className="flex items-center gap-4">
-        <div className="mono-font text-sm text-white flex items-center gap-4 bg-white/5 border border-white/10 px-4 py-2">
-          <span className="hidden sm:inline opacity-70">
-            {time.toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: '2-digit' }).toUpperCase()}
+        <div className="text-sm text-muted-foreground flex items-center gap-3">
+          <span className="hidden sm:inline">
+            {time.toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: '2-digit' })}
           </span>
           <span className="opacity-40">|</span>
-          <span className="font-bold tracking-widest text-shadow-glow">
+          <span className="font-mono">
             {time.toLocaleTimeString("en-US", { hour12: false })}
           </span>
         </div>

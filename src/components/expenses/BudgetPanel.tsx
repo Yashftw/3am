@@ -12,11 +12,11 @@ export const BudgetPanel = () => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: 0.4 }}
-      className="glass-card rounded-sm shadow-elegant overflow-hidden"
+      className="bg-[#121212] border border-white/5 rounded-sm shadow-sm overflow-hidden"
     >
-      <div className="px-6 md:px-8 py-6 border-b border-border">
-        <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Limits</p>
-        <h2 className="display-font text-2xl mt-1">Monthly Budgets</h2>
+      <div className="px-6 md:px-8 py-6 border-b border-white/5">
+        <h2 className="font-display text-xl">Monthly Budgets</h2>
+        <p className="text-xs text-muted-foreground mt-1">Limits</p>
       </div>
 
       <div className="p-6 md:p-8 space-y-4">
@@ -51,12 +51,12 @@ export const BudgetPanel = () => {
                         setBudget(cat.category, 0);
                       }
                     }}
-                    className="w-20 h-6 px-2 py-0 text-xs mono-font text-right"
+                    className="w-20 h-6 px-2 py-0 text-xs font-mono text-right bg-[#1a1a1a] border-white/10"
                   />
                 </div>
               </div>
               {cat.budget > 0 && (
-                <div className="w-full h-px bg-border overflow-hidden">
+                <div className="w-full h-1 bg-white/5 overflow-hidden rounded-full">
                   <div
                     className="h-full transition-all duration-700"
                     style={{

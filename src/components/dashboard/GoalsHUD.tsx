@@ -41,25 +41,25 @@ export const GoalsHUD = () => {
   };
 
   return (
-    <div className="glass-card rounded-none p-6 relative group flex flex-col h-full">
+    <div className="glass-card rounded-sm p-6 relative group flex flex-col h-full">
       <div className="flex items-center gap-3 mb-6">
-        <div className="hud-badge w-10 h-10 border-white/50 text-white">
+        <div className="hud-badge w-10 h-10 border-white/20 text-white rounded-sm">
           <Target className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-xl text-white text-shadow-glow">SYS_OBJ_DIR</h2>
-          <p className="text-[10px] text-muted-foreground uppercase mono-font tracking-widest">Active Objectives</p>
+          <h2 className="text-xl font-display text-white">Objectives</h2>
+          <p className="text-xs text-muted-foreground">Active Goals</p>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto no-scrollbar space-y-3 mb-6 max-h-[300px] pr-2">
         {sortedGoals.length === 0 ? (
-          <div className="h-full flex items-center justify-center border border-dashed border-white/20">
-            <span className="mono-font text-xs text-white/50 uppercase">No active objectives detected</span>
+          <div className="h-full flex items-center justify-center border border-dashed border-white/10 rounded-sm">
+            <span className="text-sm text-muted-foreground">No active objectives</span>
           </div>
         ) : (
           sortedGoals.map((g) => (
-            <div key={g.id} className={`p-3 border bg-black/40 relative overflow-hidden group/goal transition-all ${getStatusClasses(g.deadline, g.completed)}`}>
+            <div key={g.id} className={`p-3 border bg-[#121212] rounded-sm relative overflow-hidden group/goal transition-all ${getStatusClasses(g.deadline, g.completed)}`}>
               <div className="flex justify-between items-start mb-2">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
@@ -69,13 +69,13 @@ export const GoalsHUD = () => {
                   <h3 className={`font-bold tracking-wide text-sm ${g.completed ? 'line-through' : ''}`}>{g.title}</h3>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="mono-font text-[10px] opacity-70">T-MINUS</span>
-                  <span className="mono-font text-xs font-bold">{g.deadline}</span>
+                  <span className="text-xs text-muted-foreground">Due</span>
+                  <span className="text-sm font-medium">{g.deadline}</span>
                 </div>
               </div>
               
               <div 
-                className="h-4 w-full bg-black/80 border border-white/20 cursor-pointer relative overflow-hidden mt-3 group/bar"
+                className="h-2 w-full bg-black border border-white/10 rounded-full cursor-pointer relative overflow-hidden mt-3 group/bar"
                 onClick={() => incrementGoal(g.id, 25)}
               >
                 <div 
@@ -83,7 +83,7 @@ export const GoalsHUD = () => {
                   style={{ width: `${g.progress}%`, backgroundColor: g.completed ? '#ffffff' : '#808080' }}
                 />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <span className="mono-font text-[10px] font-bold mix-blend-difference text-white">{g.progress}%</span>
+                  <span className="text-[10px] mix-blend-difference text-white">{g.progress}%</span>
                 </div>
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/bar:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="mono-font text-[8px] text-white tracking-widest">+25%</span>
@@ -114,16 +114,16 @@ export const GoalsHUD = () => {
           </select>
           <input
             type="text"
-            placeholder="NEW DIRECTIVE"
+            placeholder="New goal..."
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="hud-input flex-1 px-3 py-2 outline-none mono-font text-xs uppercase placeholder:text-white/30"
+            className="hud-input flex-1 px-3 py-2 text-sm"
           />
           <input
             type="date"
             value={newDeadline}
             onChange={(e) => setNewDeadline(e.target.value)}
-            className="hud-input w-32 px-2 py-2 outline-none mono-font text-xs uppercase"
+            className="hud-input w-32 px-2 py-2 text-sm"
           />
           <button type="submit" className="hud-button px-3 py-2"><Plus className="w-4 h-4" /></button>
         </form>
