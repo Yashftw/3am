@@ -3,6 +3,9 @@ import { createContext, useContext, useState, useEffect, type ReactNode } from "
 interface UserContextValue {
   username: string;
   setUsername: (name: string) => void;
+  isAuthenticated: boolean;
+  login: (name: string) => void;
+  logout: () => void;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
@@ -17,16 +20,38 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   });
 
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem("north_auth") === "true";
+    } catch {
+      return false;
+    }
+  });
+
   useEffect(() => {
     localStorage.setItem("north_username", username);
   }, [username]);
+
+  useEffect(() => {
+    localStorage.setItem("north_auth", isAuthenticated.toString());
+  }, [isAuthenticated]);
 
   const setUsername = (name: string) => {
     setUsernameState(name || "Guest");
   };
 
+  const login = (name: string) => {
+    setUsername(name);
+    setIsAuthenticated(true);
+  };
+
+  const logout = () => {
+    setUsername("Guest");
+    setIsAuthenticated(false);
+  };
+
   return (
-    <UserContext.Provider value={{ username, setUsername }}>
+    <UserContext.Provider value={{ username, setUsername, isAuthenticated, login, logout }}>
       {children}
     </UserContext.Provider>
   );

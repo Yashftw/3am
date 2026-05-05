@@ -1,5 +1,4 @@
 import { useDashboard } from "@/lib/dashboard-context";
-import { Flame, Moon, Dumbbell, CheckSquare, Target } from "lucide-react";
 
 export const GlobalStatsBar = () => {
   const { streak, sleepData, workoutData, todos, goals } = useDashboard();
@@ -27,40 +26,35 @@ export const GlobalStatsBar = () => {
   const activeGoals = goals.filter(g => !g.completed).length;
 
   return (
-    <div className="w-full border-y border-primary/20 bg-primary/5 py-2 overflow-x-auto no-scrollbar">
-      <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center gap-6 md:gap-12 min-w-max text-xs uppercase tracking-widest mono-font text-foreground/80">
+    <div className="w-full border-y border-white/10 bg-black/40 py-3 overflow-x-auto no-scrollbar">
+      <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center gap-8 md:gap-16 min-w-max text-xs uppercase tracking-widest mono-font text-muted-foreground">
         
         <div className="flex items-center gap-2">
-          <Flame className="w-4 h-4 text-accent" />
-          <span>Streak: <span className="text-accent font-bold">{streak} days</span></span>
+          <span>Streak: <span className="text-white font-bold">{streak} days</span></span>
         </div>
 
-        <div className="w-px h-4 bg-primary/20" />
+        <div className="w-px h-4 bg-white/10" />
 
         <div className="flex items-center gap-2">
-          <Moon className="w-4 h-4 text-primary" />
-          <span>Avg Sleep: <span className="text-primary font-bold">{avgSleep}</span></span>
+          <span>Avg Sleep: <span className="text-white font-bold">{avgSleep}</span></span>
         </div>
 
-        <div className="w-px h-4 bg-primary/20" />
+        <div className="w-px h-4 bg-white/10" />
 
         <div className="flex items-center gap-2">
-          <Dumbbell className="w-4 h-4 text-success" />
-          <span>Weekly Workouts: <span className="text-success font-bold">{workoutsThisWeek}</span></span>
+          <span>Weekly Workouts: <span className="text-white font-bold">{workoutsThisWeek}</span></span>
         </div>
 
-        <div className="w-px h-4 bg-primary/20" />
+        <div className="w-px h-4 bg-white/10" />
 
         <div className="flex items-center gap-2">
-          <CheckSquare className="w-4 h-4 text-foreground" />
-          <span>Tasks Today: <span className="text-foreground font-bold">{tasksDoneToday}</span></span>
+          <span>Tasks Today: <span className="text-white font-bold">{tasksDoneToday}</span></span>
         </div>
 
-        <div className="w-px h-4 bg-primary/20" />
+        <div className="w-px h-4 bg-white/10" />
 
         <div className="flex items-center gap-2">
-          <Target className="w-4 h-4 text-primary-glow" />
-          <span>Active Goals: <span className="text-primary-glow font-bold">{activeGoals}</span></span>
+          <span>Active Goals: <span className="text-white font-bold">{activeGoals}</span></span>
         </div>
 
       </div>

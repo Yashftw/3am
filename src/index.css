@@ -4,48 +4,46 @@
 
 @layer base {
   :root {
-    --background: 210 33% 4%; /* #080C10 */
-    --foreground: 180 100% 95%;
+    --background: 0 0% 4%; /* #0a0a0a */
+    --foreground: 0 0% 95%; /* #f2f2f2 */
 
-    --card: 210 40% 6%;
-    --card-foreground: 180 100% 95%;
+    --card: 0 0% 6%;
+    --card-foreground: 0 0% 95%;
 
-    --popover: 210 40% 6%;
-    --popover-foreground: 180 100% 95%;
+    --popover: 0 0% 6%;
+    --popover-foreground: 0 0% 95%;
 
-    /* Cyan Accent */
-    --primary: 186 100% 50%; /* #00E5FF */
-    --primary-foreground: 210 33% 4%;
-    --primary-glow: 186 100% 70%;
+    /* Primary Accent: White */
+    --primary: 0 0% 100%; 
+    --primary-foreground: 0 0% 4%;
+    --primary-glow: 0 0% 80%;
 
     /* Ambient */
-    --secondary: 210 30% 12%;
-    --secondary-foreground: 186 100% 80%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 0 0% 80%;
 
-    /* Amber Warning */
-    --accent: 25 100% 50%; /* #FF6B00 */
-    --accent-foreground: 210 33% 4%;
+    /* Muted states for alerts/success/danger */
+    --accent: 0 0% 60%; 
+    --accent-foreground: 0 0% 4%;
 
-    /* Neon Green Success */
-    --success: 110 100% 54%; /* #39FF14 */
-    --success-foreground: 210 33% 4%;
+    --success: 0 0% 85%;
+    --success-foreground: 0 0% 4%;
 
-    /* Red Danger */
-    --destructive: 0 100% 50%;
-    --destructive-foreground: 180 100% 95%;
+    --destructive: 0 0% 40%;
+    --destructive-foreground: 0 0% 95%;
 
-    --muted: 210 20% 15%;
-    --muted-foreground: 210 10% 55%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 55%;
 
-    --border: 186 100% 20%;
-    --input: 210 20% 15%;
-    --ring: 186 100% 50%;
+    --border: 0 0% 20%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 100%;
 
-    --radius: 0; /* Sharp edges for HUD */
+    --radius: 0; /* Sharp edges */
 
-    --gradient-hero: linear-gradient(180deg, hsl(210 33% 4% / 0.5) 0%, hsl(186 100% 20% / 0.1) 60%, transparent 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 4% / 0.5) 0%, hsl(0 0% 15% / 0.1) 60%, transparent 100%);
     --shadow-elegant: 0 20px 60px -20px hsl(0 0% 0% / 0.8);
-    --shadow-glow: 0 0 15px hsl(var(--primary) / 0.4);
+    --shadow-glow: 0 0 15px hsl(var(--primary) / 0.2);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
@@ -60,18 +58,18 @@
     @apply bg-background text-foreground;
     font-family: 'JetBrains Mono', monospace;
     font-feature-settings: "ss01", "cv11";
-    background-color: #080C10;
+    background-color: #0a0a0a;
     overflow-x: hidden;
   }
 
-  /* Grid lines background */
+  /* Grid lines background (Monochrome) */
   body::before {
     content: '';
     position: fixed;
     inset: 0;
     background-image: 
-      linear-gradient(to right, rgba(0, 229, 255, 0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(0, 229, 255, 0.03) 1px, transparent 1px);
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 40px 40px;
     pointer-events: none;
     z-index: 0;
@@ -86,11 +84,11 @@
     left: 0;
     bottom: 0;
     right: 0;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
     z-index: 999;
-    background-size: 100% 2px, 3px 100%;
+    background-size: 100% 2px;
     pointer-events: none;
-    opacity: 0.3;
+    opacity: 0.2;
   }
 
   #root {
@@ -116,12 +114,12 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--primary) / 0.5);
+    background: hsl(var(--primary) / 0.3);
     border-radius: 0;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--primary));
+    background: hsl(var(--primary) / 0.6);
   }
 }
 
@@ -137,37 +135,37 @@
   }
 
   .glass-card {
-    background: rgba(8, 12, 16, 0.7);
+    background: rgba(10, 10, 10, 0.7);
     backdrop-filter: blur(12px);
-    border: 1px solid rgba(0, 229, 255, 0.1);
-    border-top: 1px solid rgba(0, 229, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.3);
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
     transition: all 0.3s ease;
   }
   
   .glass-card:hover {
-    border-top: 1px solid rgba(0, 229, 255, 1);
-    box-shadow: inset 0 0 20px rgba(0, 229, 255, 0.05), 0 10px 40px rgba(0, 0, 0, 0.8);
+    border-top: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02), 0 10px 40px rgba(0, 0, 0, 0.8);
     transform: translateY(-2px);
   }
 
   .hud-input {
-    @apply bg-black/50 border border-primary/30 text-primary focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all;
-    box-shadow: inset 0 0 10px rgba(0, 229, 255, 0.05);
+    @apply bg-black/50 border border-primary/20 text-primary focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all;
+    box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.02);
   }
 
   .hud-button {
-    @apply bg-primary/10 border border-primary/50 text-primary hover:bg-primary/20 hover:border-primary hover:shadow-[0_0_15px_rgba(0,229,255,0.4)] transition-all uppercase tracking-widest text-xs font-bold;
+    @apply bg-primary/5 border border-primary/30 text-primary hover:bg-primary/10 hover:border-primary hover:shadow-[0_0_15px_rgba(255,255,255,0.2)] transition-all uppercase tracking-widest text-xs font-bold;
   }
 
   .hud-badge {
-    @apply flex items-center justify-center bg-primary/10 border border-primary/30 text-primary shadow-[0_0_10px_rgba(0,229,255,0.2)];
+    @apply flex items-center justify-center bg-primary/5 border border-primary/20 text-primary;
   }
 }
 
 /* Animations */
 @keyframes flash {
-  0% { background-color: rgba(0, 229, 255, 0.3); box-shadow: 0 0 30px rgba(0, 229, 255, 0.5); }
+  0% { background-color: rgba(255, 255, 255, 0.1); box-shadow: 0 0 30px rgba(255, 255, 255, 0.2); }
   100% { background-color: transparent; box-shadow: none; }
 }
 

@@ -3,10 +3,10 @@ import { useDashboard, WorkoutCategory } from "@/lib/dashboard-context";
 import { Activity, Flame } from "lucide-react";
 
 const CATEGORY_COLORS: Record<WorkoutCategory, string> = {
-  Cardio: "#00e5ff", // cyan
-  Strength: "#ff6b00", // amber
-  Flexibility: "#a855f7", // purple
-  Recovery: "#39ff14", // neon green
+  Cardio: "#ffffff",
+  Strength: "#a0a0a0",
+  Flexibility: "#606060",
+  Recovery: "#404040",
 };
 
 export const WorkoutHUD = () => {
@@ -28,7 +28,6 @@ export const WorkoutHUD = () => {
   const weeklyTotalMins = weeklyWorkouts.reduce((acc, curr) => acc + curr.durationMinutes, 0);
   const weeklyAvgMins = weeklyWorkouts.length > 0 ? weeklyTotalMins / 7 : 0;
 
-  // Compute category totals for the radial chart (all time or just weekly? Let's do weekly)
   const categoryTotals = weeklyWorkouts.reduce((acc, curr) => {
     acc[curr.type] = (acc[curr.type] || 0) + curr.durationMinutes;
     return acc;
@@ -45,8 +44,7 @@ export const WorkoutHUD = () => {
     setTimeout(() => setIsFlashing(false), 500);
   };
 
-  // SVG Radial Math
-  const totalRadial = Math.max(weeklyTotalMins, 1); // prevent division by zero
+  const totalRadial = Math.max(weeklyTotalMins, 1);
   let currentAngle = 0;
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
@@ -55,28 +53,27 @@ export const WorkoutHUD = () => {
     <div className={`glass-card rounded-none p-6 relative group flex flex-col h-full ${isFlashing ? 'animate-flash' : ''}`}>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="hud-badge w-10 h-10">
+          <div className="hud-badge w-10 h-10 border-white/30 text-white">
             <Activity className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-xl text-primary text-shadow-glow">SYS_PHY_LOG</h2>
+            <h2 className="text-xl text-white text-shadow-glow">SYS_PHY_LOG</h2>
             <p className="text-[10px] text-muted-foreground uppercase mono-font tracking-widest">Physical Training Data</p>
           </div>
         </div>
         <div className="flex flex-col items-end">
-          <div className="flex items-center gap-1 text-accent">
-            <Flame className="w-5 h-5" />
+          <div className="flex items-center gap-1 text-white">
+            <Flame className="w-5 h-5 text-white/50" />
             <span className="display-font text-xl">{streak}</span>
           </div>
-          <span className="text-[10px] text-accent/70 mono-font uppercase">Active Streak</span>
+          <span className="text-[10px] text-white/50 mono-font uppercase">Active Streak</span>
         </div>
       </div>
 
       <div className="flex gap-6 mb-6">
-        {/* Radial Burst Chart */}
         <div className="relative w-32 h-32 flex-shrink-0">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(0, 229, 255, 0.05)" strokeWidth="12" />
+            <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(255, 255, 255, 0.05)" strokeWidth="12" />
             {(Object.keys(CATEGORY_COLORS) as WorkoutCategory[]).map((cat) => {
               const val = categoryTotals[cat] || 0;
               if (val === 0) return null;
@@ -105,7 +102,6 @@ export const WorkoutHUD = () => {
           </div>
         </div>
 
-        {/* Legend & Stats */}
         <div className="flex-1 flex flex-col justify-center gap-2">
           <div className="grid grid-cols-2 gap-x-2 gap-y-1">
             {(Object.keys(CATEGORY_COLORS) as WorkoutCategory[]).map(cat => (
@@ -115,14 +111,14 @@ export const WorkoutHUD = () => {
               </div>
             ))}
           </div>
-          <div className="mt-2 pt-2 border-t border-primary/20 flex gap-4">
+          <div className="mt-2 pt-2 border-t border-white/10 flex gap-4">
             <div>
                <p className="text-[10px] text-muted-foreground uppercase mono-font">Daily Avg</p>
-               <p className="display-font text-primary">{Math.round(weeklyAvgMins)}m</p>
+               <p className="display-font text-white">{Math.round(weeklyAvgMins)}m</p>
             </div>
             <div>
                <p className="text-[10px] text-muted-foreground uppercase mono-font">Today</p>
-               <p className="display-font text-success">{todayWorkouts.reduce((a, b) => a + b.durationMinutes, 0)}m</p>
+               <p className="display-font text-white">{todayWorkouts.reduce((a, b) => a + b.durationMinutes, 0)}m</p>
             </div>
           </div>
         </div>
@@ -144,7 +140,7 @@ export const WorkoutHUD = () => {
             placeholder="MINUTES"
             value={durationInput}
             onChange={(e) => setDurationInput(e.target.value)}
-            className="hud-input flex-1 px-3 py-2 outline-none mono-font text-sm uppercase placeholder:text-primary/30"
+            className="hud-input flex-1 px-3 py-2 outline-none mono-font text-sm uppercase placeholder:text-white/30"
           />
           <button type="submit" className="hud-button px-4 py-2">LOG</button>
         </form>

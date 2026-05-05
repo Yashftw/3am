@@ -12,6 +12,7 @@ import Login from "./pages/Login.tsx";
 import Expenses from "./pages/Expenses.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Settings from "./pages/Settings.tsx";
+import { Layout, ProtectedRoute } from "./components/Layout.tsx";
 
 const queryClient = new QueryClient();
 
@@ -27,9 +28,14 @@ const App = () => (
               <BrowserRouter>
                 <Routes>
                   <Route path="/login" element={<Login />} />
-                  <Route path="/" element={<Dashboard />} />
-                  <Route path="/expenses" element={<Expenses />} />
-                  <Route path="/settings" element={<Settings />} />
+                  
+                  {/* Protected Routes wrapped in Global Layout */}
+                  <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+                    <Route path="/" element={<Dashboard />} />
+                    <Route path="/expenses" element={<Expenses />} />
+                    <Route path="/settings" element={<Settings />} />
+                  </Route>
+
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>

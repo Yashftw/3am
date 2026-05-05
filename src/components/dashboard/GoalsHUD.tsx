@@ -3,9 +3,9 @@ import { useDashboard, GoalCategory } from "@/lib/dashboard-context";
 import { Target, Plus, Trash2 } from "lucide-react";
 
 const CAT_COLORS: Record<GoalCategory, string> = {
-  health: "#39ff14", // green
-  finance: "#00e5ff", // cyan
-  personal: "#a855f7", // purple
+  health: "#ffffff",
+  finance: "#a0a0a0",
+  personal: "#606060",
 };
 
 export const GoalsHUD = () => {
@@ -26,37 +26,36 @@ export const GoalsHUD = () => {
   today.setHours(0,0,0,0);
 
   const sortedGoals = [...goals].sort((a, b) => {
-    // completed goes to bottom
     if (a.completed !== b.completed) return a.completed ? 1 : -1;
     return new Date(a.deadline).getTime() - new Date(b.deadline).getTime();
   });
 
   const getStatusClasses = (deadline: string, completed: boolean) => {
-    if (completed) return "border-success/30 text-muted-foreground opacity-50";
+    if (completed) return "border-white/10 text-muted-foreground opacity-50";
     const d = new Date(deadline);
     d.setHours(0,0,0,0);
     const diff = (d.getTime() - today.getTime()) / (1000 * 3600 * 24);
-    if (diff < 0) return "border-destructive text-destructive animate-pulse shadow-[0_0_10px_rgba(255,0,0,0.2)]";
-    if (diff <= 3) return "border-accent text-accent shadow-[0_0_10px_rgba(255,107,0,0.2)]";
-    return "border-primary/20 text-foreground";
+    if (diff < 0) return "border-white text-white shadow-[0_0_10px_rgba(255,255,255,0.4)]";
+    if (diff <= 3) return "border-white/50 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]";
+    return "border-white/10 text-foreground";
   };
 
   return (
     <div className="glass-card rounded-none p-6 relative group flex flex-col h-full">
       <div className="flex items-center gap-3 mb-6">
-        <div className="hud-badge w-10 h-10 border-success/50 text-success">
+        <div className="hud-badge w-10 h-10 border-white/50 text-white">
           <Target className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-xl text-success text-shadow-glow">SYS_OBJ_DIR</h2>
+          <h2 className="text-xl text-white text-shadow-glow">SYS_OBJ_DIR</h2>
           <p className="text-[10px] text-muted-foreground uppercase mono-font tracking-widest">Active Objectives</p>
         </div>
       </div>
 
       <div className="flex-1 overflow-auto no-scrollbar space-y-3 mb-6 max-h-[300px] pr-2">
         {sortedGoals.length === 0 ? (
-          <div className="h-full flex items-center justify-center border border-dashed border-primary/20">
-            <span className="mono-font text-xs text-primary/50 uppercase">No active objectives detected</span>
+          <div className="h-full flex items-center justify-center border border-dashed border-white/20">
+            <span className="mono-font text-xs text-white/50 uppercase">No active objectives detected</span>
           </div>
         ) : (
           sortedGoals.map((g) => (
@@ -75,19 +74,17 @@ export const GoalsHUD = () => {
                 </div>
               </div>
               
-              {/* Progress Bar */}
               <div 
-                className="h-4 w-full bg-black/80 border border-primary/20 cursor-pointer relative overflow-hidden mt-3 group/bar"
+                className="h-4 w-full bg-black/80 border border-white/20 cursor-pointer relative overflow-hidden mt-3 group/bar"
                 onClick={() => incrementGoal(g.id, 25)}
               >
                 <div 
                   className="h-full transition-all duration-500 ease-out"
-                  style={{ width: `${g.progress}%`, backgroundColor: g.completed ? '#39ff14' : '#00e5ff' }}
+                  style={{ width: `${g.progress}%`, backgroundColor: g.completed ? '#ffffff' : '#808080' }}
                 />
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <span className="mono-font text-[10px] font-bold mix-blend-difference text-white">{g.progress}%</span>
                 </div>
-                {/* Hover overlay hint */}
                 <div className="absolute inset-0 bg-white/10 opacity-0 group-hover/bar:opacity-100 transition-opacity flex items-center justify-center">
                   <span className="mono-font text-[8px] text-white tracking-widest">+25%</span>
                 </div>
@@ -95,7 +92,7 @@ export const GoalsHUD = () => {
 
               <button 
                 onClick={(e) => { e.stopPropagation(); deleteGoal(g.id); }}
-                className="absolute top-2 right-2 p-1 opacity-0 group-hover/goal:opacity-100 text-destructive hover:bg-destructive/20 transition-all"
+                className="absolute top-2 right-2 p-1 opacity-0 group-hover/goal:opacity-100 text-white/50 hover:text-white hover:bg-white/10 transition-all"
               >
                 <Trash2 className="w-3 h-3" />
               </button>
@@ -120,7 +117,7 @@ export const GoalsHUD = () => {
             placeholder="NEW DIRECTIVE"
             value={newTitle}
             onChange={(e) => setNewTitle(e.target.value)}
-            className="hud-input flex-1 px-3 py-2 outline-none mono-font text-xs uppercase placeholder:text-primary/30"
+            className="hud-input flex-1 px-3 py-2 outline-none mono-font text-xs uppercase placeholder:text-white/30"
           />
           <input
             type="date"

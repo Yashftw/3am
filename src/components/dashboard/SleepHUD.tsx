@@ -34,10 +34,10 @@ export const SleepHUD = () => {
 
   const getColor = (h: number) => {
     if (h === 0) return "#1e293b"; // empty
-    if (h < 6) return "#ff0000"; // red
-    if (h < 7) return "#ff6b00"; // amber
-    if (h <= 9) return "#00e5ff"; // cyan
-    return "#a855f7"; // purple
+    if (h < 6) return "#404040"; // dark gray
+    if (h < 7) return "#808080"; // mid gray
+    if (h <= 9) return "#ffffff"; // white
+    return "#b0b0b0"; // light gray
   };
 
   const handleLog = (e: React.FormEvent) => {
@@ -54,11 +54,11 @@ export const SleepHUD = () => {
   return (
     <div className={`glass-card rounded-none p-6 relative group flex flex-col h-full ${isFlashing ? 'animate-flash' : ''}`}>
       <div className="flex items-center gap-3 mb-6">
-        <div className="hud-badge w-10 h-10">
+        <div className="hud-badge w-10 h-10 border-white/30 text-white">
           <Moon className="w-5 h-5" />
         </div>
         <div>
-          <h2 className="text-xl text-primary text-shadow-glow">SYS_SLEEP_TRK</h2>
+          <h2 className="text-xl text-white text-shadow-glow">SYS_SLEEP_TRK</h2>
           <p className="text-[10px] text-muted-foreground uppercase mono-font tracking-widest">Biometric Monitoring</p>
         </div>
       </div>
@@ -67,7 +67,7 @@ export const SleepHUD = () => {
         {/* Arc Gauge */}
         <div className="relative w-32 h-32 flex-shrink-0">
           <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
-            <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(0, 229, 255, 0.1)" strokeWidth="8" />
+            <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(255, 255, 255, 0.1)" strokeWidth="8" />
             <circle 
               cx="50" cy="50" r={radius} 
               fill="none" 
@@ -87,17 +87,17 @@ export const SleepHUD = () => {
 
         {/* Quick Stats */}
         <div className="flex-1 grid grid-cols-2 gap-2">
-          <div className="bg-black/40 border border-primary/20 p-2 flex flex-col justify-center">
+          <div className="bg-black/40 border border-white/10 p-2 flex flex-col justify-center">
             <span className="text-[10px] text-muted-foreground uppercase mono-font">7D Avg</span>
-            <span className="display-font text-lg text-primary">{weeklyAvg.toFixed(1)}<span className="text-xs">h</span></span>
+            <span className="display-font text-lg text-white">{weeklyAvg.toFixed(1)}<span className="text-xs">h</span></span>
           </div>
-          <div className="bg-black/40 border border-primary/20 p-2 flex flex-col justify-center">
+          <div className="bg-black/40 border border-white/10 p-2 flex flex-col justify-center">
             <span className="text-[10px] text-muted-foreground uppercase mono-font">Best</span>
-            <span className="display-font text-lg text-success">{bestNight.toFixed(1)}<span className="text-xs">h</span></span>
+            <span className="display-font text-lg text-white">{bestNight.toFixed(1)}<span className="text-xs">h</span></span>
           </div>
-          <div className="bg-black/40 border border-primary/20 p-2 col-span-2 flex flex-col justify-center relative overflow-hidden">
+          <div className="bg-black/40 border border-white/10 p-2 col-span-2 flex flex-col justify-center relative overflow-hidden">
             <span className="text-[10px] text-muted-foreground uppercase mono-font">Weekly Delta</span>
-            <span className={`display-font text-lg ${sleepDebt > 0 ? 'text-destructive' : 'text-success'}`}>
+            <span className={`display-font text-lg ${sleepDebt > 0 ? 'text-white/50' : 'text-white'}`}>
               {sleepDebt > 0 ? '-' : '+'}{Math.abs(sleepDebt).toFixed(1)}<span className="text-xs">h</span>
             </span>
           </div>
@@ -105,7 +105,7 @@ export const SleepHUD = () => {
       </div>
 
       {/* Weekly Bar Chart */}
-      <div className="h-24 mb-6 flex items-end justify-between gap-1 border-b border-primary/20 pb-2">
+      <div className="h-24 mb-6 flex items-end justify-between gap-1 border-b border-white/10 pb-2">
         {weeklyData.map((d, i) => {
           const heightPct = Math.min((d.hours / 12) * 100, 100);
           return (
@@ -121,7 +121,7 @@ export const SleepHUD = () => {
               </span>
               
               {/* Tooltip */}
-              <div className="absolute -top-8 bg-black border border-primary/50 text-[10px] mono-font px-2 py-1 opacity-0 group-hover/bar:opacity-100 pointer-events-none z-10 transition-opacity whitespace-nowrap text-primary">
+              <div className="absolute -top-8 bg-black border border-white/50 text-[10px] mono-font px-2 py-1 opacity-0 group-hover/bar:opacity-100 pointer-events-none z-10 transition-opacity whitespace-nowrap text-white">
                 {d.hours}h
               </div>
             </div>
@@ -137,7 +137,7 @@ export const SleepHUD = () => {
             placeholder="HOURS SLEPT"
             value={hoursInput}
             onChange={(e) => setHoursInput(e.target.value)}
-            className="hud-input flex-1 px-3 py-2 outline-none mono-font text-sm uppercase placeholder:text-primary/30"
+            className="hud-input flex-1 px-3 py-2 outline-none mono-font text-sm uppercase placeholder:text-white/30"
           />
           <button type="submit" className="hud-button px-4 py-2">LOG</button>
         </form>
