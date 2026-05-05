@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-import { supabase } from "./supabase";
+import { collection, doc, setDoc, getDocs, query, where, deleteDoc } from "firebase/firestore";
+import { db } from "./firebase";
+import { useUser } from "./user-context";
 
 export type ExpenseCategory = 
   | "Food" 
@@ -33,6 +35,7 @@ export interface Expense {
   category: ExpenseCategory;
   note: string;
   date: string; // ISO yyyy-mm-dd
+  user_id?: string;
 }
 
 export type Budgets = Partial<Record<ExpenseCategory, number>>;
@@ -55,12 +58,6 @@ const ExpensesContext = createContext<ExpensesContextValue | null>(null);
 
 const DEFAULT_BUDGETS: Budgets = {};
 
-function getDateDaysAgo(days: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - days);
-  return d.toISOString().split("T")[0];
-}
-
 function getTodayString(): string {
   return new Date().toISOString().split("T")[0];
 }
@@ -71,27 +68,26 @@ function getCurrentMonth(): string {
 }
 
 export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    try {
-      const saved = localStorage.getItem("north_expenses_v1");
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { user } = useUser();
+  const [expenses, setExpenses] = useState<Expense[]>([]);
 
   useEffect(() => {
+    if (!user) {
+      setExpenses([]);
+      return;
+    }
+
     const fetchExpenses = async () => {
-      // Only fetch if Supabase URL is configured
-      if (!import.meta.env.VITE_SUPABASE_URL) return;
-      
-      const { data, error } = await supabase.from("expenses").select("*");
-      if (!error && data && data.length > 0) {
-        setExpenses(data);
+      try {
+        const q = query(collection(db, "expenses"), where("user_id", "==", user.uid));
+        const snap = await getDocs(q);
+        setExpenses(snap.docs.map(doc => doc.data() as Expense));
+      } catch (err) {
+        console.error("Error fetching expenses:", err);
       }
     };
     fetchExpenses();
-  }, []);
+  }, [user]);
 
   const [budgets, setBudgets] = useState<Budgets>(() => {
     try {
@@ -112,10 +108,6 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
-    localStorage.setItem("north_expenses_v1", JSON.stringify(expenses));
-  }, [expenses]);
-
-  useEffect(() => {
     localStorage.setItem("north_budgets_v1", JSON.stringify(budgets));
   }, [budgets]);
 
@@ -124,19 +116,23 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
   }, [income]);
 
   const addExpense = async (expense: Omit<Expense, "id">) => {
-    const newExpense = { ...expense, id: crypto.randomUUID() };
+    const newExpense: Expense = { 
+      ...expense, 
+      id: crypto.randomUUID(),
+      user_id: user?.uid 
+    };
     setExpenses((prev) => [newExpense, ...prev]);
     
-    if (import.meta.env.VITE_SUPABASE_URL) {
-      await supabase.from("expenses").insert([newExpense]);
+    if (user) {
+      await setDoc(doc(db, "expenses", newExpense.id), newExpense);
     }
   };
 
   const removeExpense = async (id: string) => {
     setExpenses((prev) => prev.filter((e) => e.id !== id));
     
-    if (import.meta.env.VITE_SUPABASE_URL) {
-      await supabase.from("expenses").delete().eq("id", id);
+    if (user) {
+      await deleteDoc(doc(db, "expenses", id));
     }
   };
 

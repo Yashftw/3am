@@ -1,64 +1,62 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
-import { supabase } from "./supabase";
+import { 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged,
+  type User
+} from "firebase/auth";
+import { auth } from "./firebase";
 
 interface UserContextValue {
+  user: User | null;
   username: string;
-  setUsername: (name: string) => void;
   isAuthenticated: boolean;
-  login: (name: string) => void;
-  logout: () => void;
+  isInitializing: boolean;
+  login: (e: string, p: string) => Promise<void>;
+  signup: (e: string, p: string) => Promise<void>;
+  logout: () => Promise<void>;
 }
 
 const UserContext = createContext<UserContextValue | null>(null);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [username, setUsernameState] = useState<string>(() => {
-    try {
-      const saved = localStorage.getItem("north_username");
-      return saved || "Guest";
-    } catch {
-      return "Guest";
-    }
-  });
-
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
-    try {
-      return localStorage.getItem("north_auth") === "true";
-    } catch {
-      return false;
-    }
-  });
+  const [user, setUser] = useState<User | null>(null);
+  const [isInitializing, setIsInitializing] = useState(true);
 
   useEffect(() => {
-    localStorage.setItem("north_username", username);
-  }, [username]);
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setIsInitializing(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem("north_auth", isAuthenticated.toString());
-  }, [isAuthenticated]);
-
-  const setUsername = async (name: string) => {
-    const newName = name || "Guest";
-    setUsernameState(newName);
-    
-    if (import.meta.env.VITE_SUPABASE_URL) {
-      await supabase.from("profiles").upsert({ id: "default_user", username: newName });
-    }
+  const login = async (email: string, pass: string) => {
+    await signInWithEmailAndPassword(auth, email, pass);
   };
 
-  const login = async (name: string) => {
-    await setUsername(name);
-    setIsAuthenticated(true);
+  const signup = async (email: string, pass: string) => {
+    await createUserWithEmailAndPassword(auth, email, pass);
   };
 
   const logout = async () => {
-    await setUsername("Guest");
-    setIsAuthenticated(false);
+    await signOut(auth);
   };
 
+  const username = user?.email?.split('@')[0] || "Guest";
+
   return (
-    <UserContext.Provider value={{ username, setUsername, isAuthenticated, login, logout }}>
-      {children}
+    <UserContext.Provider value={{ 
+      user, 
+      username, 
+      isAuthenticated: !!user, 
+      isInitializing, 
+      login, 
+      signup, 
+      logout 
+    }}>
+      {!isInitializing && children}
     </UserContext.Provider>
   );
 };
@@ -68,3 +66,4 @@ export const useUser = () => {
   if (!ctx) throw new Error("useUser must be used within UserProvider");
   return ctx;
 };
+
