@@ -2,8 +2,7 @@ import { motion } from "framer-motion";
 import { GlobalStatsBar } from "@/components/dashboard/GlobalStatsBar";
 import { SleepHUD } from "@/components/dashboard/SleepHUD";
 import { WorkoutHUD } from "@/components/dashboard/WorkoutHUD";
-import { GoalsHUD } from "@/components/dashboard/GoalsHUD";
-import { TodoHUD } from "@/components/dashboard/TodoHUD";
+import { MissionControlHUD } from "@/components/dashboard/MissionControlHUD";
 import { useUser } from "@/lib/user-context";
 import { useEffect, useState } from "react";
 
@@ -70,12 +69,8 @@ export default function Dashboard() {
             <WorkoutHUD />
           </motion.div>
           
-          <motion.div custom={3} initial="hidden" animate="visible" variants={cardVariants} className="min-h-[350px]">
-            <GoalsHUD />
-          </motion.div>
-          
-          <motion.div custom={4} initial="hidden" animate="visible" variants={cardVariants} className="min-h-[350px]">
-            <TodoHUD />
+          <motion.div custom={3} initial="hidden" animate="visible" variants={cardVariants} className="lg:col-span-2 min-h-[350px]">
+            <MissionControlHUD />
           </motion.div>
 
         </div>
