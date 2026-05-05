@@ -70,50 +70,55 @@ function getCurrentMonth(): string {
 export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
   const [expenses, setExpenses] = useState<Expense[]>([]);
+  const [budgets, setBudgets] = useState<Budgets>(DEFAULT_BUDGETS);
+  const [income, setIncome] = useState<number>(0);
 
   useEffect(() => {
     if (!user) {
       setExpenses([]);
+      setBudgets(DEFAULT_BUDGETS);
+      setIncome(0);
       return;
     }
 
-    const fetchExpenses = async () => {
+    const fetchData = async () => {
       try {
+        // Fetch Expenses
         const q = query(collection(db, "expenses"), where("user_id", "==", user.uid));
         const snap = await getDocs(q);
         setExpenses(snap.docs.map(doc => doc.data() as Expense));
+
+        // Fetch Settings
+        const settingsSnap = await getDocs(query(collection(db, "settings"), where("user_id", "==", user.uid)));
+        if (!settingsSnap.empty) {
+          const data = settingsSnap.docs[0].data();
+          if (data.budgets) setBudgets(data.budgets);
+          if (data.income !== undefined) setIncome(data.income);
+        }
       } catch (err) {
-        console.error("Error fetching expenses:", err);
+        console.error("Error fetching data:", err);
       }
     };
-    fetchExpenses();
+    fetchData();
   }, [user]);
 
-  const [budgets, setBudgets] = useState<Budgets>(() => {
+  const updateSettings = async (updates: { budgets?: Budgets, income?: number }) => {
+    if (!user) return;
     try {
-      const saved = localStorage.getItem("north_budgets_v1");
-      return saved ? JSON.parse(saved) : DEFAULT_BUDGETS;
-    } catch {
-      return DEFAULT_BUDGETS;
+      const q = query(collection(db, "settings"), where("user_id", "==", user.uid));
+      const snap = await getDocs(q);
+      
+      if (snap.empty) {
+        const newSettings = { id: crypto.randomUUID(), user_id: user.uid, budgets, income, ...updates };
+        await setDoc(doc(db, "settings", newSettings.id), newSettings);
+      } else {
+        const docRef = snap.docs[0].ref;
+        await setDoc(docRef, updates, { merge: true });
+      }
+    } catch (err) {
+      console.error("Error updating settings:", err);
     }
-  });
-
-  const [income, setIncome] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem("north_income_v1");
-      return saved ? JSON.parse(saved) : 0;
-    } catch {
-      return 0;
-    }
-  });
-
-  useEffect(() => {
-    localStorage.setItem("north_budgets_v1", JSON.stringify(budgets));
-  }, [budgets]);
-
-  useEffect(() => {
-    localStorage.setItem("north_income_v1", JSON.stringify(income));
-  }, [income]);
+  };
 
   const addExpense = async (expense: Omit<Expense, "id">) => {
     const newExpense: Expense = { 
@@ -137,7 +142,16 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const setBudget = (category: ExpenseCategory, amount: number) => {
-    setBudgets((prev) => ({ ...prev, [category]: amount }));
+    setBudgets((prev) => {
+      const next = { ...prev, [category]: amount };
+      updateSettings({ budgets: next });
+      return next;
+    });
+  };
+
+  const setIncomeWithSync = (amount: number) => {
+    setIncome(amount);
+    updateSettings({ income: amount });
   };
 
   const derived = useMemo(() => {
@@ -187,7 +201,7 @@ export const ExpensesProvider = ({ children }: { children: ReactNode }) => {
         addExpense,
         removeExpense,
         setBudget,
-        setIncome,
+        setIncome: setIncomeWithSync,
         ...derived,
       }}
     >

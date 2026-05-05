@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Bell, DollarSign, Palette, Shield, User } from "lucide-react";
+import { Bell, DollarSign, Palette, Shield, User, Save } from "lucide-react";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { SiteNav } from "@/components/SiteNav";
@@ -28,6 +28,7 @@ const Settings = () => {
     { icon: DollarSign, label: "Display" },
     { icon: Bell, label: "Notifications" },
     { icon: Shield, label: "Security" },
+    { icon: Save, label: "Save Changes", customId: "save-changes" },
   ];
 
   const save = () => {
@@ -54,10 +55,10 @@ const Settings = () => {
             {sections.map((s, i) => (
               <a
                 key={s.label}
-                href={`#${s.label.toLowerCase()}`}
+                href={`#${s.customId || s.label.toLowerCase()}`}
                 className={`flex items-center gap-3 px-4 py-3 rounded-sm text-sm transition-colors hover:bg-secondary/60 ${
                   i === 0 ? "bg-secondary text-foreground" : "text-muted-foreground"
-                }`}
+                } ${s.label === "Save Changes" ? "mt-4 border border-white/10" : ""}`}
               >
                 <s.icon className="h-4 w-4" />
                 {s.label}
@@ -169,12 +170,24 @@ const Settings = () => {
               </div>
             </motion.section>
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button variant="outline">Cancel</Button>
-              <Button onClick={save} className="bg-gradient-primary text-primary-foreground hover:opacity-90">
-                Save changes
-              </Button>
-            </div>
+            {/* Save Changes Section */}
+            <motion.section
+              id="save-changes"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="glass-card rounded-sm p-8 shadow-elegant border-primary/20"
+            >
+              <h2 className="display-font text-2xl mb-1">Save Changes</h2>
+              <p className="text-sm text-muted-foreground mb-6">Apply and save all your updated preferences.</p>
+              
+              <div className="flex gap-3">
+                <Button variant="outline" className="flex-1 max-w-[150px]">Cancel</Button>
+                <Button onClick={save} className="flex-1 max-w-[200px] bg-white text-black hover:bg-gray-200 transition-colors font-semibold">
+                  Save Settings
+                </Button>
+              </div>
+            </motion.section>
           </div>
         </div>
       </main>

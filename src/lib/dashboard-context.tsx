@@ -8,6 +8,7 @@ export interface SleepRecordV2 {
   date: string; // YYYY-MM-DD
   timestamp: string; // ISO string
   hours: number;
+  user_id?: string;
 }
 
 export type WorkoutCategory = "Cardio" | "Strength" | "Flexibility" | "Recovery";
@@ -18,6 +19,7 @@ export interface WorkoutRecordV2 {
   timestamp: string;
   durationMinutes: number;
   type: WorkoutCategory;
+  user_id?: string;
 }
 
 export type GoalCategory = "health" | "finance" | "personal";
@@ -80,26 +82,16 @@ const DashboardContext = createContext<DashboardContextValue | null>(null);
 export const DashboardProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useUser();
 
-  const [sleepData, setSleepData] = useState<SleepRecordV2[]>(() => {
-    try {
-      const saved = localStorage.getItem("north_sleep_v2");
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
-
-  const [workoutData, setWorkoutData] = useState<WorkoutRecordV2[]>(() => {
-    try {
-      const saved = localStorage.getItem("north_workout_v2");
-      return saved ? JSON.parse(saved) : [];
-    } catch { return []; }
-  });
-
+  const [sleepData, setSleepData] = useState<SleepRecordV2[]>([]);
+  const [workoutData, setWorkoutData] = useState<WorkoutRecordV2[]>([]);
   const [goals, setGoals] = useState<GoalV2[]>([]);
   const [todos, setTodos] = useState<TodoV2[]>([]);
 
   // Fetch from Firestore on user change
   useEffect(() => {
     if (!user) {
+      setSleepData([]);
+      setWorkoutData([]);
       setGoals([]);
       setTodos([]);
       return;
@@ -107,6 +99,14 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
 
     const fetchDashboard = async () => {
       try {
+        const sleepQuery = query(collection(db, "sleep"), where("user_id", "==", user.uid));
+        const sleepSnap = await getDocs(sleepQuery);
+        setSleepData(sleepSnap.docs.map(doc => doc.data() as SleepRecordV2));
+
+        const workoutQuery = query(collection(db, "workouts"), where("user_id", "==", user.uid));
+        const workoutSnap = await getDocs(workoutQuery);
+        setWorkoutData(workoutSnap.docs.map(doc => doc.data() as WorkoutRecordV2));
+
         const goalsQuery = query(collection(db, "goals"), where("user_id", "==", user.uid));
         const goalsSnap = await getDocs(goalsQuery);
         setGoals(goalsSnap.docs.map(doc => doc.data() as GoalV2));
@@ -121,26 +121,33 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     fetchDashboard();
   }, [user]);
 
-  useEffect(() => { localStorage.setItem("north_sleep_v2", JSON.stringify(sleepData)); }, [sleepData]);
-  useEffect(() => { localStorage.setItem("north_workout_v2", JSON.stringify(workoutData)); }, [workoutData]);
-
-  const addSleep = (date: string, hours: number) => {
+  const addSleep = async (date: string, hours: number) => {
+    let nextRecord: SleepRecordV2 | undefined;
     setSleepData((prev) => {
       const existingIdx = prev.findIndex((s) => s.date === date);
       if (existingIdx >= 0) {
         const next = [...prev];
         next[existingIdx] = { ...next[existingIdx], hours, timestamp: new Date().toISOString() };
+        nextRecord = next[existingIdx];
         return next;
       }
-      return [...prev, { id: crypto.randomUUID(), date, timestamp: new Date().toISOString(), hours }];
+      nextRecord = { id: crypto.randomUUID(), date, timestamp: new Date().toISOString(), hours, user_id: user?.uid };
+      return [...prev, nextRecord];
     });
+    if (user && nextRecord) await setDoc(doc(db, "sleep", nextRecord.id), nextRecord);
   };
 
-  const addWorkout = (date: string, durationMinutes: number, type: WorkoutCategory) => {
-    setWorkoutData((prev) => [
-      ...prev,
-      { id: crypto.randomUUID(), date, timestamp: new Date().toISOString(), durationMinutes, type },
-    ]);
+  const addWorkout = async (date: string, durationMinutes: number, type: WorkoutCategory) => {
+    const newWorkout: WorkoutRecordV2 = { 
+      id: crypto.randomUUID(), 
+      date, 
+      timestamp: new Date().toISOString(), 
+      durationMinutes, 
+      type,
+      user_id: user?.uid 
+    };
+    setWorkoutData((prev) => [...prev, newWorkout]);
+    if (user) await setDoc(doc(db, "workouts", newWorkout.id), newWorkout);
   };
 
   const addGoal = async (title: string, deadline: string, category: GoalCategory, note?: string) => {

@@ -21,9 +21,7 @@ export const SiteNav = () => {
   return (
     <header className="relative z-20 px-4 md:px-12 py-4 flex items-center justify-between border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-md sticky top-0 flex-wrap gap-y-4">
       <NavLink to="/" className="flex items-center gap-3 group">
-        <div className="w-6 h-6 border-[1.5px] border-foreground rounded-full flex items-center justify-center relative transition-colors group-hover:border-white">
-          <div className="w-full h-[1.5px] bg-foreground absolute rotate-45 transform transition-colors group-hover:bg-white" />
-        </div>
+
         <span className="font-display text-lg tracking-widest text-foreground group-hover:text-white transition-colors">
           3am
         </span>
@@ -48,10 +46,6 @@ export const SiteNav = () => {
       </nav>
       <div className="flex items-center gap-4">
         <div className="text-sm text-muted-foreground flex items-center gap-3">
-          <span className="hidden sm:inline">
-            {time.toLocaleDateString("en-US", { weekday: 'short', month: 'short', day: '2-digit' })}
-          </span>
-          <span className="opacity-40">|</span>
           <span className="font-mono">
             {time.toLocaleTimeString("en-US", { hour12: false })}
           </span>
