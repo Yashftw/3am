@@ -139,7 +139,7 @@ export const SleepHUD = () => {
             onChange={(e) => setHoursInput(e.target.value)}
             className="hud-input flex-1 px-3 py-2 text-sm"
           />
-          <button type="submit" className="hud-button px-4 py-2">LOG</button>
+          <button type="submit" className="hud-button px-4 py-2">Log</button>
         </form>
       </div>
     </div>
