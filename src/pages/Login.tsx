@@ -18,16 +18,16 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 md:p-12 relative z-10 bg-[#0a0a0a]">
-      <div className="w-full max-w-[1200px] h-[700px] bg-black/40 border border-white/10 backdrop-blur-md rounded-sm overflow-hidden flex shadow-elegant">
+    <div className="min-h-screen flex items-center justify-center p-4 md:p-12 relative z-10 bg-[#0a0a0a]">
+      <div className="w-full max-w-[1200px] h-auto md:h-[700px] min-h-[600px] bg-black/40 border border-white/10 backdrop-blur-md rounded-sm overflow-hidden flex shadow-elegant">
         
         {/* Left Side: Login Form */}
-        <div className="w-full md:w-1/2 p-10 lg:p-16 flex flex-col justify-center relative">
+        <div className="w-full md:w-1/2 p-6 md:p-10 lg:p-16 flex flex-col justify-center relative">
           
           <div className="absolute top-8 left-8 flex items-center gap-2 group cursor-pointer">
             <div className="h-2 w-2 bg-white animate-pulse shadow-[0_0_10px_#ffffff]" />
             <span className="display-font text-lg tracking-widest text-foreground group-hover:text-white transition-colors">
-              NORTH
+              3am
             </span>
           </div>
 

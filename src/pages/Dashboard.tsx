@@ -31,7 +31,7 @@ export default function Dashboard() {
   return (
     <div className="flex-1 flex flex-col relative z-10">
       {/* Hero Section */}
-      <section className="relative flex flex-col justify-end pt-12 pb-6 px-6 md:px-12 border-b border-white/5 bg-[#0a0a0a]">
+      <section className="relative flex flex-col justify-end pt-12 pb-6 px-4 md:px-12 border-b border-white/5 bg-[#0a0a0a]">
         <div className="relative z-10 w-full max-w-[1600px] mx-auto flex items-end justify-between">
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -59,7 +59,7 @@ export default function Dashboard() {
 
       <GlobalStatsBar />
 
-      <main className="flex-1 relative px-6 md:px-12 py-8 max-w-[1600px] w-full mx-auto z-10">
+      <main className="flex-1 relative px-4 md:px-12 py-8 max-w-[1600px] w-full mx-auto z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
           
           <motion.div custom={1} initial="hidden" animate="visible" variants={cardVariants} className="min-h-[350px]">
@@ -81,10 +81,10 @@ export default function Dashboard() {
         </div>
       </main>
 
-      <footer className="border-t border-white/5 px-6 md:px-12 py-6 bg-[#0a0a0a] mt-auto relative z-10">
+      <footer className="border-t border-white/5 px-4 md:px-12 py-6 bg-[#0a0a0a] mt-auto relative z-10">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-sans text-muted-foreground">
           <div className="flex items-center gap-4">
-            <span>© 2026 NORTH</span>
+            <span>© 2026 3am</span>
           </div>
           <span className="text-white/40">Last sync: {lastSync}</span>
         </div>

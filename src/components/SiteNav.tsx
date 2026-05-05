@@ -19,16 +19,16 @@ export const SiteNav = () => {
   }, []);
 
   return (
-    <header className="relative z-20 px-6 md:px-12 py-4 flex items-center justify-between border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-md sticky top-0">
+    <header className="relative z-20 px-4 md:px-12 py-4 flex items-center justify-between border-b border-white/5 bg-[#0a0a0a]/90 backdrop-blur-md sticky top-0 flex-wrap gap-y-4">
       <NavLink to="/" className="flex items-center gap-3 group">
         <div className="w-6 h-6 border-[1.5px] border-foreground rounded-full flex items-center justify-center relative transition-colors group-hover:border-white">
           <div className="w-full h-[1.5px] bg-foreground absolute rotate-45 transform transition-colors group-hover:bg-white" />
         </div>
         <span className="font-display text-lg tracking-widest text-foreground group-hover:text-white transition-colors">
-          NORTH
+          3am
         </span>
       </NavLink>
-      <nav className="hidden md:flex items-center gap-8 text-sm font-medium">
+      <nav className="flex items-center gap-4 md:gap-8 text-sm font-medium order-3 w-full md:w-auto md:order-none overflow-x-auto no-scrollbar pb-1 md:pb-0">
         {links.map((l) => (
           <NavLink
             key={l.to}

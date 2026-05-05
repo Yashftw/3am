@@ -1,9 +1,8 @@
-const CACHE_NAME = 'north-v1';
+const CACHE_NAME = '3am-v1';
 const urlsToCache = [
   '/',
   '/index.html',
   '/favicon.svg',
-  '/mountain-bg.jpg',
 ];
 
 // Install event - cache resources

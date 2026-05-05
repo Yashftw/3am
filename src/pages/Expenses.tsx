@@ -17,7 +17,7 @@ const Expenses = () => {
 
   return (
     <div className="flex-1 flex flex-col relative z-10 bg-[#0a0a0a]">
-      <div className="relative z-10 px-6 md:px-12 py-8 max-w-[1600px] w-full mx-auto flex items-end justify-between">
+      <div className="relative z-10 px-4 md:px-12 py-8 max-w-[1600px] w-full mx-auto flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4">
         <motion.div
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -50,7 +50,7 @@ const Expenses = () => {
         </div>
       </div>
 
-      <main className="relative px-6 md:px-12 py-8 md:py-12 max-w-[1600px] mx-auto space-y-8 z-10">
+      <main className="relative px-4 md:px-12 py-8 md:py-12 max-w-[1600px] mx-auto space-y-8 z-10">
         <ExpenseSummary />
         
         <AddExpenseForm />
@@ -71,9 +71,9 @@ const Expenses = () => {
 
       </main>
 
-      <footer className="border-t border-white/5 px-6 md:px-12 py-10 mt-16 bg-[#0a0a0a]">
+      <footer className="border-t border-white/5 px-4 md:px-12 py-10 mt-16 bg-[#0a0a0a]">
         <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-xs font-sans text-muted-foreground">
-          <span>© 2026 NORTH — All amounts stored locally.</span>
+          <span>© 2026 3am — All amounts stored locally.</span>
           <span>SPEND CONSCIOUSLY · INVEST PATIENTLY</span>
         </div>
       </footer>
