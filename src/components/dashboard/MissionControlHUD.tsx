@@ -237,16 +237,18 @@ const ExpandedObjectives = () => {
 
               <div className="flex justify-between items-end mt-auto pt-2">
                 <div className="flex flex-col gap-1">
-                  {nextSubTask && !isExpanded && (
+                  {nextSubTask && !isExpanded && !g.completed && (
                     <span className="mono-font text-[9px] text-[#FF9500]">◆ NEXT: <span className="text-muted-foreground italic">{nextSubTask.text}</span></span>
                   )}
-                  <button 
-                    className="flex items-center text-muted-foreground hover:text-white transition-colors w-fit"
-                    onClick={() => setExpandedGoals(prev => ({ ...prev, [g.id]: !prev[g.id] }))}
-                  >
-                    {isExpanded ? <ChevronDown className="w-3 h-3 mr-1" /> : <ChevronRight className="w-3 h-3 mr-1" />}
-                    <span className="mono-font text-[9px] uppercase">{g.subTasks?.length || 0} steps</span>
-                  </button>
+                  {!g.completed && (
+                    <button 
+                      className="flex items-center text-muted-foreground hover:text-white transition-colors w-fit"
+                      onClick={() => setExpandedGoals(prev => ({ ...prev, [g.id]: !prev[g.id] }))}
+                    >
+                      {isExpanded ? <ChevronDown className="w-3 h-3 mr-1" /> : <ChevronRight className="w-3 h-3 mr-1" />}
+                      <span className="mono-font text-[9px] uppercase">{g.subTasks?.length || 0} steps</span>
+                    </button>
+                  )}
                 </div>
                 
                 {g.completed ? (
