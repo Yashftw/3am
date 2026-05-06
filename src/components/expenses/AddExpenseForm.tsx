@@ -7,7 +7,7 @@ import { useExpenses, CATEGORIES } from "@/lib/expenses-context";
 import { toast } from "sonner";
 
 export const AddExpenseForm = () => {
-  const { addExpense } = useExpenses();
+  const { addExpense, byCategory, monthTotal, income } = useExpenses();
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState(CATEGORIES[0].name);
   const [note, setNote] = useState("");
@@ -26,6 +26,21 @@ export const AddExpenseForm = () => {
     if (isNaN(amountNum) || amountNum <= 0) {
       toast.error("Please enter a valid amount greater than 0");
       return;
+    }
+
+    const catData = byCategory.find(c => c.category === category);
+    if (catData && catData.budget > 0) {
+      if (catData.total + amountNum > catData.budget) {
+        toast.error(`Exceeds ${category} budget limit of ${catData.budget}!`);
+        return;
+      }
+    }
+
+    if (income > 0) {
+      if (monthTotal + amountNum > income) {
+        toast.error(`Exceeds total monthly limit of ${income}!`);
+        return;
+      }
     }
 
     addExpense({

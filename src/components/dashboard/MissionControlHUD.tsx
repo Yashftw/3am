@@ -234,12 +234,13 @@ const ExpandedObjectives = () => {
                 {Array.from({ length: 10 }).map((_, i) => {
                   const threshold = (i + 1) * 10;
                   const isFilled = g.progress >= threshold;
+                  const hasSteps = g.subTasks && g.subTasks.length > 0;
                   return (
                     <div 
                       key={i}
-                      className={`h-[6px] flex-1 cursor-pointer transition-all ${isFilled ? `bg-[${GOAL_CAT_COLORS[g.category]}] shadow-[0_0_8px_${GOAL_CAT_COLORS[g.category]}80]` : 'bg-white/10 hover:bg-white/20'}`}
+                      className={`h-[6px] flex-1 transition-all ${isFilled ? `bg-[${GOAL_CAT_COLORS[g.category]}] shadow-[0_0_8px_${GOAL_CAT_COLORS[g.category]}80]` : 'bg-white/10'} ${!hasSteps ? 'cursor-pointer hover:bg-white/20' : ''}`}
                       style={isFilled ? { backgroundColor: GOAL_CAT_COLORS[g.category] } : {}}
-                      onClick={() => setGoalProgress(g.id, threshold)}
+                      onClick={() => !hasSteps && setGoalProgress(g.id, threshold)}
                     />
                   );
                 })}

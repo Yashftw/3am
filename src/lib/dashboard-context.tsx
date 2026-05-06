@@ -206,7 +206,12 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
         const updatedSubTasks = next[idx].subTasks?.map(st => 
           st.id === subTaskId ? { ...st, completed: !st.completed } : st
         ) || [];
-        next[idx] = { ...next[idx], subTasks: updatedSubTasks };
+        
+        const total = updatedSubTasks.length;
+        const completedCount = updatedSubTasks.filter(st => st.completed).length;
+        const progress = total > 0 ? Math.round((completedCount / total) * 100) : next[idx].progress;
+
+        next[idx] = { ...next[idx], subTasks: updatedSubTasks, progress, completed: progress === 100 };
         updateGoalDoc(next[idx]);
       }
       return next;
@@ -219,8 +224,13 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
       const idx = next.findIndex(g => g.id === goalId);
       if (idx >= 0) {
         const newSubTask = { id: crypto.randomUUID(), text, completed: false };
-        const subTasks = next[idx].subTasks ? [...next[idx].subTasks, newSubTask] : [newSubTask];
-        next[idx] = { ...next[idx], subTasks };
+        const updatedSubTasks = next[idx].subTasks ? [...next[idx].subTasks, newSubTask] : [newSubTask];
+        
+        const total = updatedSubTasks.length;
+        const completedCount = updatedSubTasks.filter(st => st.completed).length;
+        const progress = total > 0 ? Math.round((completedCount / total) * 100) : next[idx].progress;
+
+        next[idx] = { ...next[idx], subTasks: updatedSubTasks, progress, completed: progress === 100 };
         updateGoalDoc(next[idx]);
       }
       return next;

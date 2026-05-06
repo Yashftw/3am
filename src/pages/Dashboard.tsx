@@ -61,16 +61,16 @@ export default function Dashboard() {
       <main className="flex-1 relative px-4 md:px-12 py-8 max-w-[1600px] w-full mx-auto z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-full">
           
-          <motion.div custom={1} initial="hidden" animate="visible" variants={cardVariants} className="min-h-[350px]">
-            <SleepHUD />
+          <motion.div custom={1} initial="hidden" animate="visible" variants={cardVariants} className="lg:col-span-2 min-h-[350px]">
+            <MissionControlHUD />
           </motion.div>
           
           <motion.div custom={2} initial="hidden" animate="visible" variants={cardVariants} className="min-h-[350px]">
-            <WorkoutHUD />
+            <SleepHUD />
           </motion.div>
           
-          <motion.div custom={3} initial="hidden" animate="visible" variants={cardVariants} className="lg:col-span-2 min-h-[350px]">
-            <MissionControlHUD />
+          <motion.div custom={3} initial="hidden" animate="visible" variants={cardVariants} className="min-h-[350px]">
+            <WorkoutHUD />
           </motion.div>
 
         </div>
