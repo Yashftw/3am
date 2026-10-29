@@ -14,7 +14,7 @@
     --popover-foreground: 0 0% 95%;
 
     /* Primary Accent: White */
-    --primary: 0 0% 100%; 
+    --primary: 0 0% 100%;
     --primary-foreground: 0 0% 4%;
     --primary-glow: 0 0% 80%;
 
@@ -23,7 +23,7 @@
     --secondary-foreground: 0 0% 80%;
 
     /* Muted states for alerts/success/danger */
-    --accent: 0 0% 60%; 
+    --accent: 0 0% 60%;
     --accent-foreground: 0 0% 4%;
 
     --success: 0 0% 85%;
@@ -46,6 +46,19 @@
     --shadow-glow: 0 0 15px hsl(var(--primary) / 0.2);
 
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* ---- Motion tokens (mirrors src/lib/motion.ts) ---- */
+    --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+    --ease-snap: cubic-bezier(0.25, 1, 0.5, 1);
+    --dur-fast: 180ms;
+    --dur-base: 320ms;
+    --dur-slow: 620ms;
+
+    /* ---- Elevation. Pure black shadows keep the palette monochrome. ---- */
+    --elev-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+    --elev-2: 0 8px 24px -8px rgba(0, 0, 0, 0.7);
+    --elev-3: 0 24px 60px -20px rgba(0, 0, 0, 0.85);
   }
 }
 
@@ -54,16 +67,53 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+    /* Stops the layout shifting sideways when a modal locks the scrollbar. */
+    scrollbar-gutter: stable;
+  }
+
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
-    font-feature-settings: "ss01", "cv11";
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-feature-settings: "ss01", "cv11", "tnum";
+    font-synthesis-weight: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
     background-color: #0a0a0a;
-    background-image: 
+    background-image:
       linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
       linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 40px 40px;
     overflow-x: hidden;
+  }
+
+  /*
+   * Two fixed atmosphere layers sit behind everything: a slow vertical
+   * gradient that stops the grid reading as flat graph paper, and a very fine
+   * film grain that keeps large dark areas from banding on OLED panels.
+   * Both are greyscale, so the palette is untouched.
+   */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background:
+      radial-gradient(1200px 700px at 50% -20%, rgba(255, 255, 255, 0.045), transparent 65%),
+      radial-gradient(900px 600px at 100% 110%, rgba(255, 255, 255, 0.025), transparent 60%);
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: -50%;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.16;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
   }
 
   #root {
@@ -72,14 +122,39 @@
   }
 
   h1, h2, h3, h4 {
-    font-family: 'Archivo', sans-serif;
+    font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif;
     letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Tabular figures everywhere a number can change, so digits never jitter. */
+  .mono-font,
+  input[type="number"],
+  input[type="date"],
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* A single consistent focus ring, only for keyboard users. */
+  :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 1px #0a0a0a, 0 0 0 3px rgba(255, 255, 255, 0.55);
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background: rgba(255, 255, 255, 0.92);
+    color: #0a0a0a;
   }
 
   /* Custom scrollbar styling */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
   }
 
   ::-webkit-scrollbar-track {
@@ -87,80 +162,340 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
-    border: 2px solid #0a0a0a;
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+    transition: background 0.2s;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.28);
+    background-clip: content-box;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.14) transparent;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Native date/number controls are near-invisible on a black surface. */
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    opacity: 0.4;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  input[type="date"]:hover::-webkit-calendar-picker-indicator {
+    opacity: 0.85;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+  }
+
+  select option {
+    background-color: #121212;
+    color: #f2f2f2;
   }
 }
 
 @layer utilities {
   .display-font {
-    font-family: 'Archivo', sans-serif;
+    font-family: 'Archivo', ui-sans-serif, system-ui, sans-serif;
     letter-spacing: -0.02em;
   }
 
   .mono-font {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
   }
 
+  /* ---------------------------------------------------------------- */
+  /* Surfaces                                                          */
+  /* ---------------------------------------------------------------- */
+
+  /*
+   * The primary card. Three stacked effects give it depth on a flat black
+   * page: a faint top-lit gradient fill, a brighter top border simulating a
+   * light source above, and a layered shadow. All greyscale.
+   */
+  .surface-card {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 40%, rgba(255, 255, 255, 0) 100%),
+      rgba(13, 13, 13, 0.72);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-top-color: rgba(255, 255, 255, 0.13);
+    box-shadow: var(--elev-2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition:
+      border-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out),
+      background-color var(--dur-base) var(--ease-out);
+  }
+
+  .surface-card--interactive:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+    border-top-color: rgba(255, 255, 255, 0.26);
+    box-shadow: var(--elev-3), inset 0 1px 0 rgba(255, 255, 255, 0.07);
+    transform: translateY(-2px);
+  }
+
+  /* Kept for anything still referencing the original class name. */
   .glass-card {
-    background: rgba(18, 18, 18, 0.3);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.045) 0%, rgba(255, 255, 255, 0.012) 40%, rgba(255, 255, 255, 0) 100%),
+      rgba(13, 13, 13, 0.72);
+    backdrop-filter: blur(14px) saturate(120%);
+    -webkit-backdrop-filter: blur(14px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-top-color: rgba(255, 255, 255, 0.13);
+    box-shadow: var(--elev-2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    transition:
+      border-color var(--dur-base) var(--ease-out),
+      box-shadow var(--dur-base) var(--ease-out),
+      transform var(--dur-base) var(--ease-out);
   }
-  
+
   .glass-card:hover {
-    border-color: rgba(255, 255, 255, 0.15);
-    border-top: 1px solid rgba(255, 255, 255, 0.2);
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.16);
+    border-top-color: rgba(255, 255, 255, 0.26);
+    box-shadow: var(--elev-3), inset 0 1px 0 rgba(255, 255, 255, 0.07);
   }
+
+  /*
+   * Opaque variant of surface-card, for bars that float over content.
+   * The translucent default let text read through a sticky footer.
+   */
+  .surface-solid {
+    background:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.015) 100%),
+      #0c0c0c;
+  }
+
+  /* Inset well for nested stats inside a card. */
+  .surface-well {
+    background: rgba(255, 255, 255, 0.022);
+    border: 1px solid rgba(255, 255, 255, 0.055);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    transition:
+      border-color var(--dur-base) var(--ease-out),
+      background-color var(--dur-base) var(--ease-out);
+  }
+
+  .surface-well:hover {
+    background: rgba(255, 255, 255, 0.04);
+    border-color: rgba(255, 255, 255, 0.11);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Controls                                                          */
+  /* ---------------------------------------------------------------- */
 
   .hud-input {
-    @apply bg-[#121212] border border-[#222] text-foreground focus:border-white focus:ring-1 focus:ring-white/30 transition-all rounded-sm;
+    @apply rounded-sm border text-foreground;
+    background: rgba(255, 255, 255, 0.025);
+    border-color: rgba(255, 255, 255, 0.09);
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+  }
+
+  .hud-input::placeholder {
+    color: rgba(255, 255, 255, 0.28);
+  }
+
+  .hud-input:hover {
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+
+  .hud-input:focus,
+  .hud-input:focus-visible {
+    outline: none;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.55);
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.07);
   }
 
   .hud-button {
-    @apply bg-white text-black border border-transparent hover:bg-gray-200 transition-colors py-2 px-4 rounded-sm font-semibold;
+    @apply relative overflow-hidden rounded-sm border border-transparent bg-white px-4 py-2 font-semibold text-black;
+    transition:
+      background-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-snap),
+      box-shadow var(--dur-fast) var(--ease-out);
+  }
+
+  .hud-button:hover {
+    background-color: #e8e8e8;
+    box-shadow: 0 0 22px rgba(255, 255, 255, 0.18);
+  }
+
+  .hud-button:active {
+    transform: scale(0.97);
+  }
+
+  .hud-button:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+  }
+
+  /* Light sweeps across the button once on hover. */
+  .hud-button::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.65) 50%, transparent 75%);
+    transform: translateX(-120%);
+    transition: transform 620ms var(--ease-out);
+    pointer-events: none;
+  }
+
+  .hud-button:hover::after {
+    transform: translateX(120%);
   }
 
   .hud-badge {
-    @apply flex items-center justify-center bg-[#222] border border-[#333] text-foreground rounded-sm text-xs px-2 py-0.5;
+    @apply flex items-center justify-center rounded-sm px-2 py-0.5 text-xs text-foreground;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* Subtle ghost button used for secondary actions. */
+  .ghost-button {
+    @apply rounded-sm border border-white/10 bg-white/[0.02] text-muted-foreground;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-snap);
+  }
+
+  .ghost-button:hover {
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  .ghost-button:active {
+    transform: scale(0.97);
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Typography accents                                                */
+  /* ---------------------------------------------------------------- */
+
+  .eyebrow {
+    @apply mono-font text-[10px] uppercase tracking-[0.22em] text-muted-foreground;
+  }
+
+  /* Headline treatment: a soft vertical fade, still pure greyscale. */
+  .text-gradient {
+    background: linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.62) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .hairline {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.14) 15%, rgba(255, 255, 255, 0.14) 85%, transparent);
+    height: 1px;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Loading                                                           */
+  /* ---------------------------------------------------------------- */
+
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .shimmer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07), transparent);
+    animation: shimmer 1.6s infinite;
+  }
+
+  /* ---------------------------------------------------------------- */
+  /* Priority + category accents (unchanged palette)                   */
+  /* ---------------------------------------------------------------- */
+
+  .glow-p1 { border-left: 2px solid #FF4060; box-shadow: -8px 0 18px -10px rgba(255, 64, 96, 0.55); }
+  .glow-p2 { border-left: 2px solid #FF9500; box-shadow: -8px 0 18px -10px rgba(255, 149, 0, 0.55); }
+  .glow-p3 { border-left: 2px solid #9B9B9B; box-shadow: -8px 0 18px -10px rgba(155, 155, 155, 0.55); }
+  .glow-completed { border-left: 2px solid rgba(255, 255, 255, 0.55); box-shadow: none; }
+
+  .accent-health { border-left: 3px solid #39D353; }
+  .accent-finance { border-left: 3px solid #FFB800; }
+  .accent-personal { border-left: 3px solid #9B9B9B; }
+
+  .hover-scanline {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hover-scanline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -40%;
+    width: 40%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.055), transparent);
+    transition: left 620ms var(--ease-out);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .hover-scanline:hover::before {
+    left: 140%;
   }
 }
 
-/* Animations */
-@keyframes flash {
-  0% { background-color: rgba(255, 255, 255, 0.1); box-shadow: 0 0 30px rgba(255, 255, 255, 0.2); }
-  100% { background-color: transparent; box-shadow: none; }
-}
+/* ------------------------------------------------------------------ */
+/* Keyframes                                                           */
+/* ------------------------------------------------------------------ */
 
-.animate-flash {
-  animation: flash 0.5s ease-out;
-}
-
-@keyframes sweep {
-  from { stroke-dashoffset: 1000; }
-  to { stroke-dashoffset: 0; }
-}
-
-.animate-sweep {
-  animation: sweep 1.5s ease-out forwards;
+@keyframes shimmer {
+  100% { transform: translateX(100%); }
 }
 
 @keyframes floatUp {
-  from { opacity: 0; transform: translateY(20px); }
+  from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
 .animate-float-up {
-  animation: floatUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: floatUp 0.6s var(--ease-out) forwards;
 }
 
 @keyframes strikethrough {
@@ -178,61 +513,321 @@
   left: 0;
   top: 50%;
   height: 1px;
-  background: #ffffff;
-  animation: strikethrough 0.3s ease-out forwards;
+  background: currentColor;
+  opacity: 0.7;
+  animation: strikethrough 0.32s var(--ease-out) forwards;
 }
 
-/* UI Enhancement Classes */
-@layer utilities {
-  .glow-p1 { border-left: 3px solid #FF4060; box-shadow: -5px 0 15px -5px rgba(255, 64, 96, 0.4); }
-  .glow-p2 { border-left: 3px solid #FF9500; box-shadow: -5px 0 15px -5px rgba(255, 149, 0, 0.4); }
-  .glow-p3 { border-left: 3px solid #9B9B9B; box-shadow: -5px 0 15px -5px rgba(155, 155, 155, 0.4); }
-  .glow-completed { border-left: 3px solid #FFFFFF; box-shadow: -5px 0 15px -5px rgba(255, 255, 255, 0.4); }
-
-  .hover-scanline {
-    position: relative;
-    overflow: hidden;
-  }
-  .hover-scanline::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    transform: translateY(-100%);
-    opacity: 0;
-    transition: opacity 0.3s;
-    pointer-events: none;
-    z-index: 10;
-  }
-  .hover-scanline:hover::before {
-    opacity: 1;
-    animation: scanline 1.5s linear infinite;
-  }
-
-  .accent-health { border-left: 3px solid #39D353; }
-  .accent-finance { border-left: 3px solid #FFB800; }
-  .accent-personal { border-left: 3px solid #9B9B9B; }
+@keyframes pulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.28); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
 }
 
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(1000%); }
-}
-
-@keyframes blink-once {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0; }
-}
-.animate-blink-once {
-  animation: blink-once 1s ease-in-out 1;
+.animate-pulse-ring {
+  animation: pulseRing 1.8s var(--ease-out) infinite;
 }
 
 @keyframes glow-flash {
-  0% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); border-color: rgba(255, 255, 255, 0.1); }
-  50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); border-color: rgba(255, 255, 255, 1); }
+  0%   { box-shadow: 0 0 0 rgba(255, 255, 255, 0); border-color: rgba(255, 255, 255, 0.1); }
+  50%  { box-shadow: 0 0 26px rgba(255, 255, 255, 0.35); border-color: rgba(255, 255, 255, 0.85); }
   100% { box-shadow: 0 0 0 rgba(255, 255, 255, 0); border-color: rgba(255, 255, 255, 0.1); }
 }
+
 .animate-glow-flash {
-  animation: glow-flash 1.5s ease-out;
+  animation: glow-flash 1.4s var(--ease-out);
 }
 
+@keyframes breathe {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+.animate-breathe {
+  animation: breathe 2.6s var(--ease-in-out) infinite;
+}
+
+
+/* ------------------------------------------------------------------ */
+/* HUD layer                                                           */
+/*                                                                     */
+/* A futuristic pass built entirely from white at low alpha: bracket   */
+/* corners, tick rails, scanlines and bloom. No hue is introduced, so  */
+/* the monochrome palette is exactly as it was.                        */
+/* ------------------------------------------------------------------ */
+
+@layer utilities {
+  /*
+   * Bracket corners, as on an instrument display. Drawn with two
+   * pseudo-elements (two corners each) so no extra DOM is needed and the
+   * element's own border stays intact.
+   */
+  .hud-frame::before,
+  .hud-frame::after {
+    content: '';
+    position: absolute;
+    width: 13px;
+    height: 13px;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.45;
+    transition: opacity var(--dur-base) var(--ease-out), width var(--dur-base) var(--ease-out), height var(--dur-base) var(--ease-out);
+  }
+
+  .hud-frame::before {
+    top: 0;
+    left: 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.75);
+    border-left: 1px solid rgba(255, 255, 255, 0.75);
+  }
+
+  .hud-frame::after {
+    right: 0;
+    bottom: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.75);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.75);
+  }
+
+  .hud-frame:hover::before,
+  .hud-frame:hover::after,
+  .group\/card:hover .hud-frame::before,
+  .group\/card:hover .hud-frame::after {
+    opacity: 1;
+    width: 20px;
+    height: 20px;
+  }
+
+  /* Measurement rail: fine ticks, like a ruler edge under a header. */
+  .tick-rail {
+    height: 6px;
+    background-image: repeating-linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.22) 0 1px,
+      transparent 1px 8px
+    );
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  }
+
+  /* Bracketed mono label: [ SPENT ] */
+  .hud-label {
+    @apply mono-font text-[10px] uppercase tracking-[0.22em] text-muted-foreground;
+  }
+
+  .hud-label::before {
+    content: '[ ';
+    opacity: 0.4;
+  }
+
+  .hud-label::after {
+    content: ' ]';
+    opacity: 0.4;
+  }
+
+  /* Bloom on the numbers that matter. Pure white, so still greyscale. */
+  .hud-glow {
+    text-shadow: 0 0 18px rgba(255, 255, 255, 0.28);
+  }
+
+  .hud-glow-soft {
+    text-shadow: 0 0 12px rgba(255, 255, 255, 0.16);
+  }
+
+  /*
+   * Slow scanline drifting down a surface. Opacity is deliberately near the
+   * threshold of visibility - it should register as texture, not decoration.
+   */
+  .hud-scan {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hud-scan::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 0;
+    height: 28%;
+    pointer-events: none;
+    z-index: 1;
+    background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.035), transparent);
+    animation: hudScan 7s linear infinite;
+  }
+
+  /* Live-data caret that blinks beside a value the app is watching. */
+  .hud-live::after {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    margin-left: 7px;
+    vertical-align: middle;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.85);
+    animation: hudPulse 2s var(--ease-in-out) infinite;
+  }
+
+  /* Clipped corner, for chips and buttons that carry no border of their own. */
+  .hud-cut {
+    clip-path: polygon(9px 0, 100% 0, 100% calc(100% - 9px), calc(100% - 9px) 100%, 0 100%, 0 9px);
+  }
+
+  .hud-cut-sm {
+    clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+  }
+
+  /* Readout panel: inset, gridded, for dense numeric blocks. */
+  .hud-readout {
+    background:
+      repeating-linear-gradient(to right, rgba(255, 255, 255, 0.018) 0 1px, transparent 1px 22px),
+      rgba(255, 255, 255, 0.022);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+  }
+}
+
+@keyframes hudScan {
+  0% { transform: translateY(-120%); }
+  100% { transform: translateY(460%); }
+}
+
+@keyframes hudPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.25; transform: scale(0.8); }
+}
+
+/* A value that just changed: a single bright tick, then settle. */
+@keyframes hudTick {
+  0% { color: #fff; text-shadow: 0 0 22px rgba(255, 255, 255, 0.85); }
+  100% { text-shadow: 0 0 0 rgba(255, 255, 255, 0); }
+}
+
+.animate-hud-tick {
+  animation: hudTick 0.9s var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-scan::after,
+  .hud-live::after {
+    animation: none;
+  }
+}
+
+
+/* ------------------------------------------------------------------ */
+/* Toasts                                                              */
+/*                                                                     */
+/* Sonner ships a linear slide. These override it with the app's own   */
+/* easing so a confirmation arrives the same way every other surface   */
+/* does: a short rise, a blur burning off, and a fast exit that never  */
+/* holds up the next one.                                              */
+/* ------------------------------------------------------------------ */
+
+[data-sonner-toaster] {
+  --toast-enter: 420ms;
+  --toast-exit: 200ms;
+}
+
+.hud-toast {
+  position: relative;
+  overflow: hidden;
+  border-left-width: 2px !important;
+  border-left-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* A hairline that drains as the toast times out, so the 3s is visible
+   rather than something the toast does to you without warning. */
+.hud-toast::after {
+  content: '';
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 1px;
+  transform-origin: left;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.12));
+  animation: toastDrain 3000ms linear forwards;
+}
+
+/* Paused while hovered, matching Sonner holding the timer open. */
+[data-sonner-toaster]:hover .hud-toast::after,
+.hud-toast:focus-within::after {
+  animation-play-state: paused;
+}
+
+.hud-toast[data-type="warning"] {
+  border-left-color: #FF9500 !important;
+}
+
+.hud-toast[data-type="error"] {
+  border-left-color: #FF4060 !important;
+}
+
+.hud-toast[data-type="warning"]::after {
+  background: linear-gradient(90deg, rgba(255, 149, 0, 0.7), rgba(255, 149, 0, 0.15));
+}
+
+.hud-toast[data-type="error"]::after {
+  background: linear-gradient(90deg, rgba(255, 64, 96, 0.7), rgba(255, 64, 96, 0.15));
+}
+
+/*
+ * Enter/exit motion.
+ *
+ * Only opacity and filter are animated here. Sonner positions stacked toasts
+ * with an inline `transform`, so a keyframe that sets `transform` replaces it
+ * and every toast in the stack collapses onto the same spot — which is what
+ * a first attempt at a slide-in did. Sonner keeps ownership of movement; this
+ * just adds the blur burn-off the rest of the app uses.
+ */
+[data-sonner-toast][data-mounted="true"] {
+  animation: toastIn 360ms var(--ease-out) both;
+}
+
+[data-sonner-toast][data-removed="true"] {
+  animation: toastOut 180ms var(--ease-in-out) both;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; filter: blur(7px); }
+  to   { opacity: 1; filter: blur(0); }
+}
+
+@keyframes toastOut {
+  from { opacity: 1; filter: blur(0); }
+  to   { opacity: 0; filter: blur(5px); }
+}
+
+@keyframes toastDrain {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-sonner-toast][data-mounted="true"],
+  [data-sonner-toast][data-removed="true"] {
+    animation: none;
+  }
+  .hud-toast::after {
+    animation: none;
+    opacity: 0.35;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Accessibility                                                       */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

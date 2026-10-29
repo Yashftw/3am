@@ -1,8 +1,23 @@
-import { useState, useEffect } from "react";
-import { useDashboard, GoalCategory, PriorityLevel, TodoCategory } from "@/lib/dashboard-context";
-import { Target, ListChecks, Plus, Trash2, ChevronRight, ChevronDown, Check } from "lucide-react";
+import { forwardRef, useEffect, useState } from "react";
+import { AnimatePresence, LayoutGroup, motion } from "framer-motion";
+import { Check, ChevronDown, ChevronRight, ListChecks, Plus, Target, Trash2, X } from "lucide-react";
+import {
+  useDashboard,
+  todosForDate,
+  type GoalCategory,
+  type PriorityLevel,
+  type TodoCategory,
+  type TodoV2,
+} from "@/lib/dashboard-context";
+import { lastNDates, relativeTime, toLocalISODate, isOnLocalDate } from "@/lib/date-utils";
+import { SpotlightCard } from "@/components/motion/SpotlightCard";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
+import { Gauge, SegmentedMeter } from "@/components/motion/Gauge";
+import { EASE_OUT, fadeIn, spring, staggerContainer, tap, tapSoft } from "@/lib/motion";
 
-// --- HELPERS ---
+/* ------------------------------------------------------------------ */
+/* Palette (unchanged)                                                 */
+/* ------------------------------------------------------------------ */
 
 const PRIORITY_COLORS: Record<PriorityLevel, string> = {
   P1: "#FF4060",
@@ -23,130 +38,210 @@ const GOAL_CAT_COLORS: Record<GoalCategory, string> = {
   personal: "#9B9B9B",
 };
 
-const getRelativeTime = (timestamp: string) => {
-  const diff = Date.now() - new Date(timestamp).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return "older";
-};
-
 const getDueDateStatus = (deadline: string, completed: boolean) => {
-  if (completed) return { text: "muted-foreground", class: "", border: "border-white/10" };
-  const d = new Date(deadline);
-  d.setHours(0,0,0,0);
+  if (completed) return { text: "text-muted-foreground", border: "border-white/10" };
+  const d = new Date(`${deadline}T23:59:59`);
   const today = new Date();
-  today.setHours(0,0,0,0);
+  today.setHours(0, 0, 0, 0);
   const diff = (d.getTime() - today.getTime()) / (1000 * 3600 * 24);
-  
-  if (diff < 0) return { text: "text-[#FF4060]", class: "animate-blink-once", border: "border-[#FF4060]" };
-  if (diff <= 3) return { text: "text-[#FF9500]", class: "", border: "border-[#FF9500]" };
-  return { text: "text-muted-foreground", class: "", border: "border-white/10" };
+
+  if (diff < 0) return { text: "text-[#FF4060]", border: "border-[#FF4060]/50" };
+  if (diff <= 3) return { text: "text-[#FF9500]", border: "border-[#FF9500]/50" };
+  return { text: "text-muted-foreground", border: "border-white/10" };
 };
 
-// --- SUB-COMPONENTS ---
+/* ------------------------------------------------------------------ */
+/* Shared bits                                                         */
+/* ------------------------------------------------------------------ */
+
+/** Checkbox with a spring pop and a draw-on tick. */
+const TaskCheck = ({
+  checked,
+  onClick,
+  size = "sm",
+}: {
+  checked: boolean;
+  onClick: () => void;
+  size?: "sm" | "md";
+}) => {
+  const dim = size === "md" ? "h-4 w-4" : "h-3.5 w-3.5";
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      whileTap={{ scale: 0.82 }}
+      whileHover={{ scale: 1.12 }}
+      transition={spring.snappy}
+      aria-pressed={checked}
+      aria-label={checked ? "Mark as not done" : "Mark as done"}
+      className={`${dim} flex shrink-0 items-center justify-center rounded-full border transition-colors ${
+        checked ? "border-transparent bg-white" : "border-white/45 bg-[#0a0a0a] hover:border-white"
+      }`}
+    >
+      <AnimatePresence>
+        {checked && (
+          <motion.span
+            initial={{ scale: 0, rotate: -40 }}
+            animate={{ scale: 1, rotate: 0 }}
+            exit={{ scale: 0 }}
+            transition={spring.snappy}
+          >
+            <Check className={size === "md" ? "h-2.5 w-2.5 text-black" : "h-2 w-2 text-black"} strokeWidth={3.5} />
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </motion.button>
+  );
+};
+
+const EmptySlate = forwardRef<HTMLDivElement, { label: string }>(({ label }, ref) => (
+  <motion.div
+    ref={ref}
+    initial={{ opacity: 0, scale: 0.98 }}
+    animate={{ opacity: 1, scale: 1 }}
+    transition={{ duration: 0.45, ease: EASE_OUT }}
+    className="flex h-20 items-center justify-center border border-dashed border-white/10"
+  >
+    <span className="text-xs text-muted-foreground">{label}</span>
+  </motion.div>
+));
+EmptySlate.displayName = "EmptySlate";
+
+/* ------------------------------------------------------------------ */
+/* Collapsed panes                                                     */
+/* ------------------------------------------------------------------ */
+
+const PaneHeader = ({
+  icon: Icon,
+  title,
+  onExpand,
+}: {
+  icon: typeof Target;
+  title: string;
+  onExpand: () => void;
+}) => (
+  <div className="mb-4 flex items-center justify-between">
+    <div className="flex items-center gap-2">
+      <Icon className="h-4 w-4 text-white" />
+      <h3 className="font-display text-lg text-white">{title}</h3>
+    </div>
+    <motion.button
+      type="button"
+      onClick={onExpand}
+      whileHover={{ x: 3 }}
+      whileTap={tap}
+      transition={spring.snappy}
+      className="mono-font flex items-center gap-1 text-[10px] uppercase tracking-wider text-white/45 transition-colors hover:text-white"
+    >
+      View all <span aria-hidden>→</span>
+    </motion.button>
+  </div>
+);
 
 const CollapsedObjectives = ({ onExpand }: { onExpand: () => void }) => {
   const { goals } = useDashboard();
-  const activeGoals = goals.filter(g => !g.completed).slice(0, 3);
+  const activeGoals = goals.filter((g) => !g.completed).slice(0, 3);
 
   return (
-    <div className="flex-1 flex flex-col h-full border-r border-white/5 pr-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <Target className="w-4 h-4 text-white" />
-          <h3 className="font-display text-lg text-white">Objectives</h3>
-        </div>
-        <button onClick={onExpand} className="mono-font text-[10px] uppercase text-white/50 hover:text-white transition-colors">
-          View All →
-        </button>
-      </div>
+    <div className="flex h-full flex-1 flex-col border-b border-white/5 pb-6 md:border-b-0 md:border-r md:pb-0 md:pr-6">
+      <PaneHeader icon={Target} title="Objectives" onExpand={onExpand} />
 
-      <div className="space-y-3">
-        {activeGoals.length === 0 ? (
-          <div className="h-20 flex items-center justify-center border border-dashed border-white/10 rounded-sm">
-            <span className="text-xs text-muted-foreground">No active goals</span>
-          </div>
-        ) : (
-          activeGoals.map(g => {
-            const dueStatus = getDueDateStatus(g.deadline, false);
-            return (
-              <div key={g.id} className="bg-[#111] border border-white/5 rounded-sm p-2 flex flex-col gap-2 relative overflow-hidden">
-                <div className={`absolute left-0 top-0 bottom-0 w-[2px] bg-[${GOAL_CAT_COLORS[g.category]}] opacity-50`} />
-                <div className="flex justify-between items-center pl-2">
-                  <span className="text-xs font-bold text-white truncate max-w-[120px]">{g.title}</span>
-                  <div className={`px-2 py-0.5 rounded-full border ${dueStatus.border} bg-[#1a1a1a]`}>
-                    <span className={`text-[9px] mono-font ${dueStatus.text}`}>{g.deadline.substring(5)}</span>
+      <motion.div variants={staggerContainer(0.07)} initial="hidden" animate="visible" className="space-y-3">
+        <AnimatePresence mode="popLayout">
+          {activeGoals.length === 0 ? (
+            <EmptySlate label="No active goals" />
+          ) : (
+            activeGoals.map((g) => {
+              const due = getDueDateStatus(g.deadline, false);
+              const accent = GOAL_CAT_COLORS[g.category];
+              return (
+                <motion.div
+                  key={g.id}
+                  layout
+                  variants={fadeIn}
+                  exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }}
+                  whileHover={{ x: 3 }}
+                  transition={spring.gentle}
+                  className="surface-well relative flex flex-col gap-2 overflow-hidden p-2.5"
+                >
+                  <span
+                    className="absolute inset-y-0 left-0 w-[2px] opacity-70"
+                    style={{ backgroundColor: accent }}
+                  />
+                  <div className="flex items-center justify-between pl-2">
+                    <span className="max-w-[140px] truncate text-xs font-semibold text-white">{g.title}</span>
+                    <div className={`rounded-full border px-2 py-0.5 ${due.border} bg-white/[0.04]`}>
+                      <span className={`mono-font text-[9px] ${due.text}`}>{g.deadline.substring(5)}</span>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-px pl-2 pr-1">
-                  {Array.from({ length: 10 }).map((_, i) => (
-                    <div 
-                      key={i}
-                      className={`h-1.5 flex-1 ${g.progress >= (i+1)*10 ? 'bg-white' : 'bg-white/10'}`}
-                    />
-                  ))}
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+                  <div className="pl-2 pr-1">
+                    <SegmentedMeter progress={g.progress} color={accent} />
+                  </div>
+                </motion.div>
+              );
+            })
+          )}
+        </AnimatePresence>
+      </motion.div>
     </div>
   );
 };
 
 const CollapsedTasks = ({ onExpand }: { onExpand: () => void }) => {
   const { todos, toggleTodo } = useDashboard();
-  const todayStr = new Date().toISOString().split("T")[0];
-  const todayTodos = todos.filter(t => t.createdAt.startsWith(todayStr) || (t.completedAt && t.completedAt.startsWith(todayStr)));
+  const todayTodos = todosForDate(todos, toLocalISODate());
 
   return (
-    <div className="flex-1 flex flex-col h-full pl-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <ListChecks className="w-4 h-4 text-white" />
-          <h3 className="font-display text-lg text-white">Tasks</h3>
-        </div>
-        <button onClick={onExpand} className="mono-font text-[10px] uppercase text-white/50 hover:text-white transition-colors">
-          View All →
-        </button>
-      </div>
+    <div className="flex h-full flex-1 flex-col pt-6 md:pl-6 md:pt-0">
+      <PaneHeader icon={ListChecks} title="Tasks" onExpand={onExpand} />
 
-      <div className="space-y-2 overflow-auto no-scrollbar max-h-[160px]">
-        {todayTodos.length === 0 ? (
-          <div className="h-20 flex items-center justify-center border border-dashed border-white/10 rounded-sm">
-            <span className="text-xs text-muted-foreground">No tasks today</span>
-          </div>
-        ) : (
-          todayTodos.map(t => {
-            const glowClass = t.completed ? 'glow-completed' : `glow-${t.priority.toLowerCase()}`;
-            return (
-              <div key={t.id} className={`flex items-center bg-[#111] border border-white/5 rounded-sm p-2 hover-scanline ${glowClass}`}>
-                <button 
-                  className={`w-3.5 h-3.5 rounded-full border border-white/50 flex items-center justify-center mr-2 shrink-0 ${t.completed ? 'bg-white/20 border-transparent' : 'bg-[#0a0a0a]'}`}
-                  onClick={() => toggleTodo(t.id)}
+      <div className="no-scrollbar max-h-[170px] space-y-2 overflow-auto">
+        <AnimatePresence mode="popLayout" initial={false}>
+          {todayTodos.length === 0 ? (
+            <EmptySlate label="No tasks today" />
+          ) : (
+            todayTodos.map((t) => (
+              <motion.div
+                key={t.id}
+                layout
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -12, transition: { duration: 0.2 } }}
+                transition={spring.gentle}
+                className={`hover-scanline surface-well flex items-center p-2 ${
+                  t.completed ? "glow-completed" : `glow-${t.priority.toLowerCase()}`
+                }`}
+              >
+                <div className="mr-2">
+                  <TaskCheck checked={t.completed} onClick={() => toggleTodo(t.id)} />
+                </div>
+                <span
+                  className={`flex-1 truncate text-xs font-medium ${
+                    t.completed ? "animate-strikethrough opacity-40" : "text-foreground"
+                  }`}
                 >
-                  {t.completed && <Check className="w-2 h-2 text-white" />}
-                </button>
-                <span className={`text-xs font-medium truncate flex-1 ${t.completed ? 'opacity-40 animate-strikethrough' : 'text-foreground'}`}>
                   {t.text}
                 </span>
                 {!t.completed && (
-                  <span className="text-[8px] mono-font px-1 border border-white/10 bg-white/5 rounded-sm ml-2" style={{ color: PRIORITY_COLORS[t.priority] }}>
+                  <span
+                    className="mono-font ml-2 border border-white/10 bg-white/5 px-1 text-[8px]"
+                    style={{ color: PRIORITY_COLORS[t.priority] }}
+                  >
                     {t.priority}
                   </span>
                 )}
-              </div>
-            );
-          })
-        )}
+              </motion.div>
+            ))
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/* Expanded: Objectives                                                */
+/* ------------------------------------------------------------------ */
 
 const ExpandedObjectives = () => {
   const { goals, addGoal, setGoalProgress, toggleGoalSubTask, addGoalSubTask, deleteGoal } = useDashboard();
@@ -158,9 +253,7 @@ const ExpandedObjectives = () => {
   const [stepText, setStepText] = useState("");
 
   const handleAddStep = (goalId: string) => {
-    if (stepText.trim()) {
-      addGoalSubTask(goalId, stepText);
-    }
+    if (stepText.trim()) addGoalSubTask(goalId, stepText.trim());
     setAddingStepFor(null);
     setStepText("");
   };
@@ -168,13 +261,13 @@ const ExpandedObjectives = () => {
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim() || !newDeadline) return;
-    addGoal(newTitle, newDeadline, newCat);
+    addGoal(newTitle.trim(), newDeadline, newCat);
     setNewTitle("");
     setNewDeadline("");
   };
 
-  const totalProgress = goals.length > 0 
-    ? Math.round(goals.reduce((acc, g) => acc + g.progress, 0) / goals.length) 
+  const totalProgress = goals.length
+    ? Math.round(goals.reduce((acc, g) => acc + g.progress, 0) / goals.length)
     : 0;
 
   const sortedGoals = [...goals].sort((a, b) => {
@@ -183,184 +276,299 @@ const ExpandedObjectives = () => {
   });
 
   return (
-    <div className="flex flex-col h-full animate-float-up">
-      <div className="flex items-center justify-between mb-6">
+    <div className="flex h-full flex-col">
+      <div className="mb-6 flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-display text-white">Active Objectives</h2>
-          <p className="text-xs text-muted-foreground mono-font mt-1">Track your long-term missions</p>
+          <h2 className="font-display text-2xl text-white">Active Objectives</h2>
+          <p className="mono-font mt-1 text-xs text-muted-foreground">Track your long-term missions</p>
         </div>
-        <div className="relative w-12 h-12">
-          <svg className="w-full h-full -rotate-90" viewBox="0 0 50 50">
-            <circle cx="25" cy="25" r="22" fill="none" stroke="rgba(255, 255, 255, 0.1)" strokeWidth="3" />
-            <circle 
-              cx="25" cy="25" r="22" 
-              fill="none" 
-              stroke="#ffffff" 
-              strokeWidth="3" 
-              strokeLinecap="round"
-              strokeDasharray={138.2}
-              strokeDashoffset={138.2 - (totalProgress / 100) * 138.2}
-              className="transition-all duration-1000 ease-out"
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="mono-font text-[10px] text-white font-bold">{totalProgress}%</span>
-          </div>
-        </div>
+        <Gauge value={totalProgress / 100} size={48} strokeWidth={3}>
+          <AnimatedNumber value={totalProgress} suffix="%" className="mono-font text-[10px] font-bold text-white" />
+        </Gauge>
       </div>
 
-      <div className="flex overflow-x-auto no-scrollbar gap-4 pb-4 mb-4">
-        {sortedGoals.map(g => {
-          const dueStatus = getDueDateStatus(g.deadline, g.completed);
-          const isExpanded = expandedGoals[g.id];
-          const nextSubTask = g.subTasks?.find(st => !st.completed);
+      <div className="no-scrollbar mb-4 flex gap-4 overflow-x-auto pb-4">
+        <AnimatePresence mode="popLayout" initial={false}>
+          {sortedGoals.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="flex h-[180px] w-full items-center justify-center border border-dashed border-white/10"
+            >
+              <span className="text-xs text-muted-foreground">No objectives yet — add one below.</span>
+            </motion.div>
+          )}
 
-          return (
-            <div key={g.id} className={`shrink-0 w-[280px] bg-[#141414] border border-[#2a2a2a] rounded-[8px] p-4 flex flex-col relative group/goal ${g.completed ? 'animate-glow-flash' : ''}`}>
-              <div className="absolute left-0 top-0 bottom-0 w-[3px] rounded-l-[8px]" style={{ backgroundColor: GOAL_CAT_COLORS[g.category] }} />
-              
-              <div className="flex justify-between items-center mb-3">
-                <span className="mono-font text-[9px] font-bold uppercase tracking-widest" style={{ color: GOAL_CAT_COLORS[g.category] }}>
-                  {g.category}
-                </span>
-                <span className="mono-font text-[10px] text-muted-foreground">{g.deadline}</span>
-              </div>
-              
-              <h3 className={`text-lg font-bold mb-1 leading-tight ${g.completed ? 'text-white/40 line-through' : 'text-white'}`}>{g.title}</h3>
-              {g.note && <p className="text-xs text-muted-foreground italic mb-4">{g.note}</p>}
-              {!g.note && <div className="mb-4" />}
+          {sortedGoals.map((g, i) => {
+            const due = getDueDateStatus(g.deadline, g.completed);
+            const isExpanded = expandedGoals[g.id];
+            const nextSubTask = g.subTasks?.find((st) => !st.completed);
+            const accent = GOAL_CAT_COLORS[g.category];
+            const hasSteps = (g.subTasks?.length ?? 0) > 0;
 
-              <div className="flex items-center gap-0.5 mb-4">
-                {Array.from({ length: 10 }).map((_, i) => {
-                  const threshold = (i + 1) * 10;
-                  const isFilled = g.progress >= threshold;
-                  const hasSteps = g.subTasks && g.subTasks.length > 0;
-                  return (
-                    <div 
-                      key={i}
-                      className={`h-[6px] flex-1 transition-all ${isFilled ? `bg-[${GOAL_CAT_COLORS[g.category]}] shadow-[0_0_8px_${GOAL_CAT_COLORS[g.category]}80]` : 'bg-white/10'} ${!hasSteps ? 'cursor-pointer hover:bg-white/20' : ''}`}
-                      style={isFilled ? { backgroundColor: GOAL_CAT_COLORS[g.category] } : {}}
-                      onClick={() => !hasSteps && setGoalProgress(g.id, threshold)}
-                    />
-                  );
-                })}
-              </div>
+            return (
+              <motion.div
+                key={g.id}
+                layout
+                initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.94, transition: { duration: 0.2 } }}
+                transition={{ ...spring.layout, delay: Math.min(i * 0.04, 0.24) }}
+                whileHover={{ y: -4 }}
+                className={`group/goal surface-card relative flex w-[290px] shrink-0 flex-col p-4 ${
+                  g.completed ? "animate-glow-flash" : ""
+                }`}
+              >
+                <span className="absolute inset-y-0 left-0 w-[3px]" style={{ backgroundColor: accent }} />
 
-              <div className="flex justify-between items-end mt-auto pt-2">
-                <div className="flex flex-col gap-1">
-                  {nextSubTask && !isExpanded && !g.completed && (
-                    <span className="mono-font text-[9px] text-[#FF9500]">◆ NEXT: <span className="text-muted-foreground italic">{nextSubTask.text}</span></span>
-                  )}
-                  {!g.completed && (
-                    <button 
-                      className="flex items-center text-muted-foreground hover:text-white transition-colors w-fit"
-                      onClick={() => setExpandedGoals(prev => ({ ...prev, [g.id]: !prev[g.id] }))}
-                    >
-                      {isExpanded ? <ChevronDown className="w-3 h-3 mr-1" /> : <ChevronRight className="w-3 h-3 mr-1" />}
-                      <span className="mono-font text-[9px] uppercase">{g.subTasks?.length || 0} steps</span>
-                    </button>
-                  )}
+                <div className="mb-3 flex items-center justify-between">
+                  <span
+                    className="mono-font text-[9px] font-bold uppercase tracking-[0.18em]"
+                    style={{ color: accent }}
+                  >
+                    {g.category}
+                  </span>
+                  <span className="mono-font text-[10px] text-muted-foreground">{g.deadline}</span>
                 </div>
-                
-                {g.completed ? (
-                  <div className="flex items-center gap-1 border border-white/20 bg-white/10 px-2 py-1 rounded-full">
-                    <Check className="w-3 h-3 text-white" />
-                    <span className="text-[9px] font-bold text-white mono-font uppercase">DONE</span>
-                  </div>
-                ) : (
-                  <div className={`px-2 py-1 rounded-full border ${dueStatus.border} bg-[#1a1a1a]`}>
-                    <span className={`text-[9px] mono-font ${dueStatus.text}`}>Due {g.deadline.substring(5)}</span>
-                  </div>
-                )}
-              </div>
 
-              {isExpanded && g.subTasks && (
-                <div className="mt-4 pt-4 border-t border-white/5 space-y-2">
-                  {g.subTasks.map(st => (
-                    <div key={st.id} className="flex items-center gap-2 pl-2 border-l border-white/10">
-                      <button 
-                        className={`w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0 transition-colors ${st.completed ? 'bg-white border-transparent' : 'bg-[#0a0a0a] border-white/50 hover:border-white'}`}
-                        onClick={() => toggleGoalSubTask(g.id, st.id)}
+                <h3
+                  className={`mb-1 text-lg font-bold leading-tight ${
+                    g.completed ? "text-white/40 line-through" : "text-white"
+                  }`}
+                >
+                  {g.title}
+                </h3>
+                {g.note ? (
+                  <p className="mb-4 text-xs italic text-muted-foreground">{g.note}</p>
+                ) : (
+                  <div className="mb-4" />
+                )}
+
+                <SegmentedMeter
+                  progress={g.progress}
+                  color={accent}
+                  onSegmentClick={hasSteps ? undefined : (threshold) => setGoalProgress(g.id, threshold)}
+                  className="mb-4"
+                />
+
+                <div className="mt-auto flex items-end justify-between pt-2">
+                  <div className="flex flex-col gap-1">
+                    {nextSubTask && !isExpanded && !g.completed && (
+                      <span className="mono-font text-[9px] text-[#FF9500]">
+                        ◆ NEXT:{" "}
+                        <span className="italic text-muted-foreground">{nextSubTask.text}</span>
+                      </span>
+                    )}
+                    {!g.completed && (
+                      <button
+                        type="button"
+                        className="flex w-fit items-center text-muted-foreground transition-colors hover:text-white"
+                        onClick={() => setExpandedGoals((p) => ({ ...p, [g.id]: !p[g.id] }))}
                       >
-                        {st.completed && <Check className="w-2.5 h-2.5 text-black" />}
-                      </button>
-                      <span className={`text-xs ${st.completed ? 'text-white/40 line-through' : 'text-white/90'}`}>{st.text}</span>
-                    </div>
-                  ))}
-                  <div className="pt-2">
-                    {addingStepFor === g.id ? (
-                      <div className="flex items-center gap-2 pl-2">
-                        <input
-                          type="text"
-                          autoFocus
-                          value={stepText}
-                          onChange={e => setStepText(e.target.value)}
-                          onKeyDown={e => {
-                            if (e.key === "Enter") handleAddStep(g.id);
-                            if (e.key === "Escape") setAddingStepFor(null);
-                          }}
-                          onBlur={() => handleAddStep(g.id)}
-                          className="bg-transparent text-xs text-white outline-none border-b border-white/20 focus:border-white/50 pb-1 w-full"
-                          placeholder="Step description..."
-                        />
-                      </div>
-                    ) : (
-                      <button 
-                        onClick={() => { setAddingStepFor(g.id); setStepText(""); }}
-                        className="text-[10px] mono-font text-muted-foreground hover:text-white pl-2 transition-colors"
-                      >
-                        [+ add step]
+                        <motion.span animate={{ rotate: isExpanded ? 90 : 0 }} transition={spring.snappy}>
+                          <ChevronRight className="mr-1 h-3 w-3" />
+                        </motion.span>
+                        <span className="mono-font text-[9px] uppercase">{g.subTasks?.length || 0} steps</span>
                       </button>
                     )}
                   </div>
+
+                  {g.completed ? (
+                    <motion.div
+                      initial={{ scale: 0.6, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={spring.snappy}
+                      className="flex items-center gap-1 rounded-full border border-white/20 bg-white/10 px-2 py-1"
+                    >
+                      <Check className="h-3 w-3 text-white" />
+                      <span className="mono-font text-[9px] font-bold uppercase text-white">Done</span>
+                    </motion.div>
+                  ) : (
+                    <div className={`rounded-full border px-2 py-1 ${due.border} bg-white/[0.04]`}>
+                      <span className={`mono-font text-[9px] ${due.text}`}>Due {g.deadline.substring(5)}</span>
+                    </div>
+                  )}
                 </div>
-              )}
 
-              <button 
-                onClick={(e) => { e.stopPropagation(); deleteGoal(g.id); }}
-                className="absolute top-3 right-3 p-1.5 opacity-0 group-hover/goal:opacity-100 text-white/40 hover:text-white hover:bg-white/10 transition-all rounded-sm"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          );
-        })}
+                <AnimatePresence initial={false}>
+                  {isExpanded && (
+                    <motion.div
+                      key="steps"
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.32, ease: EASE_OUT }}
+                      className="overflow-hidden"
+                    >
+                      <div className="mt-4 space-y-2 border-t border-white/5 pt-4">
+                        {(g.subTasks ?? []).map((st) => (
+                          <motion.div
+                            key={st.id}
+                            layout
+                            initial={{ opacity: 0, x: -6 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="flex items-center gap-2 border-l border-white/10 pl-2"
+                          >
+                            <TaskCheck checked={st.completed} onClick={() => toggleGoalSubTask(g.id, st.id)} />
+                            <span
+                              className={`text-xs ${st.completed ? "text-white/40 line-through" : "text-white/90"}`}
+                            >
+                              {st.text}
+                            </span>
+                          </motion.div>
+                        ))}
+
+                        <div className="pt-2">
+                          {addingStepFor === g.id ? (
+                            <div className="pl-2">
+                              <input
+                                type="text"
+                                autoFocus
+                                value={stepText}
+                                onChange={(e) => setStepText(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") handleAddStep(g.id);
+                                  if (e.key === "Escape") { setAddingStepFor(null); setStepText(""); }
+                                }}
+                                onBlur={() => handleAddStep(g.id)}
+                                className="w-full border-b border-white/20 bg-transparent pb-1 text-xs text-white outline-none transition-colors focus:border-white/60"
+                                placeholder="Step description..."
+                              />
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => { setAddingStepFor(g.id); setStepText(""); }}
+                              className="mono-font pl-2 text-[10px] text-muted-foreground transition-colors hover:text-white"
+                            >
+                              [+ add step]
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <motion.button
+                  type="button"
+                  whileTap={tap}
+                  onClick={(e) => { e.stopPropagation(); deleteGoal(g.id); }}
+                  aria-label={`Delete ${g.title}`}
+                  className="absolute right-3 top-3 p-1.5 text-white/35 opacity-0 transition-all hover:bg-white/10 hover:text-white group-hover/goal:opacity-100"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </motion.button>
+              </motion.div>
+            );
+          })}
+        </AnimatePresence>
       </div>
 
-      <div className="mt-auto">
-        <form onSubmit={handleAdd} className="flex items-center bg-[#111] border border-[#222] rounded-sm overflow-hidden focus-within:border-white/30 focus-within:ring-1 focus-within:ring-white/10 transition-all">
-          <input
-            type="text"
-            placeholder="Goal name ———"
-            value={newTitle}
-            onChange={(e) => setNewTitle(e.target.value)}
-            className="flex-1 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
-          />
-          <div className="w-px h-4 bg-[#222]" />
-          <select 
-            value={newCat} 
-            onChange={e => setNewCat(e.target.value as GoalCategory)}
-            className="w-24 bg-transparent px-2 py-2 outline-none mono-font text-[10px] uppercase text-center"
-          >
-            <option value="personal" className="text-black">Personal▾</option>
-            <option value="health" className="text-black">Health▾</option>
-            <option value="finance" className="text-black">Finance▾</option>
-          </select>
-          <div className="w-px h-4 bg-[#222]" />
-          <input
-            type="date"
-            value={newDeadline}
-            onChange={(e) => setNewDeadline(e.target.value)}
-            className="w-32 bg-transparent px-2 py-2 text-xs outline-none"
-          />
-          <button type="submit" className="bg-white text-black font-bold px-4 py-2 text-[10px] mono-font uppercase tracking-wider hover:bg-gray-200 transition-colors">
-            + ADD
-          </button>
-        </form>
-      </div>
+      <form
+        onSubmit={handleAdd}
+        className="mt-auto flex items-center overflow-hidden border border-white/10 bg-white/[0.02] transition-all focus-within:border-white/30 focus-within:bg-white/[0.04]"
+      >
+        <input
+          type="text"
+          placeholder="Goal name ———"
+          value={newTitle}
+          onChange={(e) => setNewTitle(e.target.value)}
+          className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground"
+        />
+        <span className="h-4 w-px bg-white/10" />
+        <select
+          value={newCat}
+          onChange={(e) => setNewCat(e.target.value as GoalCategory)}
+          className="mono-font w-24 bg-transparent px-2 py-2.5 text-center text-[10px] uppercase outline-none"
+          aria-label="Goal category"
+        >
+          <option value="personal">Personal</option>
+          <option value="health">Health</option>
+          <option value="finance">Finance</option>
+        </select>
+        <span className="h-4 w-px bg-white/10" />
+        <input
+          type="date"
+          value={newDeadline}
+          onChange={(e) => setNewDeadline(e.target.value)}
+          className="w-32 bg-transparent px-2 py-2.5 text-xs outline-none"
+          aria-label="Deadline"
+        />
+        <motion.button
+          whileTap={tap}
+          type="submit"
+          className="mono-font flex items-center gap-1 bg-white px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-black transition-colors hover:bg-gray-200"
+        >
+          <Plus className="h-3 w-3" /> Add
+        </motion.button>
+      </form>
     </div>
   );
 };
+
+/* ------------------------------------------------------------------ */
+/* Expanded: Tasks                                                     */
+/* ------------------------------------------------------------------ */
+
+const TaskRow = ({ todo, onToggle, onDelete }: { todo: TodoV2; onToggle: () => void; onDelete: () => void }) => (
+  <motion.div
+    layout
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    exit={{ opacity: 0, x: -16, height: 0, marginBottom: 0, transition: { duration: 0.22 } }}
+    transition={spring.gentle}
+    className={`hover-scanline group/todo flex items-center border border-white/[0.07] bg-white/[0.02] px-3 py-2 transition-colors hover:border-white/20 ${
+      todo.completed ? "glow-completed" : `glow-${todo.priority.toLowerCase()}`
+    }`}
+  >
+    <div className="mr-3">
+      <TaskCheck checked={todo.completed} onClick={onToggle} size="md" />
+    </div>
+
+    <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex items-center gap-2">
+        {todo.category && (
+          <span
+            className="h-1.5 w-1.5 shrink-0 rounded-full"
+            style={{ backgroundColor: CAT_COLORS[todo.category] }}
+          />
+        )}
+        <span
+          className={`truncate text-sm font-medium ${
+            todo.completed ? "animate-strikethrough opacity-40" : "text-white"
+          }`}
+        >
+          {todo.text}
+        </span>
+        {!todo.completed && (
+          <span
+            className="mono-font ml-auto shrink-0 border border-white/10 bg-[#0a0a0a] px-1 text-[9px] uppercase"
+            style={{ color: PRIORITY_COLORS[todo.priority] }}
+          >
+            [{todo.priority}]
+          </span>
+        )}
+        {!todo.completed && todo.estimatedTime && (
+          <span className="mono-font shrink-0 text-[10px] text-muted-foreground">{todo.estimatedTime}</span>
+        )}
+      </div>
+      <span className="mt-1 text-[9px] italic text-muted-foreground">
+        Logged: {relativeTime(todo.createdAt)}
+      </span>
+    </div>
+
+    <motion.button
+      type="button"
+      whileTap={tap}
+      onClick={onDelete}
+      aria-label={`Delete ${todo.text}`}
+      className="ml-2 shrink-0 p-1.5 text-white/35 opacity-0 transition-all hover:bg-white/10 hover:text-white group-hover/todo:opacity-100"
+    >
+      <Trash2 className="h-3.5 w-3.5" />
+    </motion.button>
+  </motion.div>
+);
 
 const ExpandedTasks = () => {
   const { todos, addTodo, toggleTodo, deleteTodo } = useDashboard();
@@ -370,16 +578,16 @@ const ExpandedTasks = () => {
   const [time, setTime] = useState("");
   const [allClear, setAllClear] = useState(false);
 
-  const todayStr = new Date().toISOString().split("T")[0];
-  const todayTodos = todos.filter(t => t.createdAt.startsWith(todayStr) || (t.completedAt && t.completedAt.startsWith(todayStr)));
-  const completedToday = todayTodos.filter(t => t.completed).length;
+  const todayStr = toLocalISODate();
+  const todayTodos = todosForDate(todos, todayStr);
+  const completedToday = todayTodos.filter((t) => t.completed).length;
   const totalToday = todayTodos.length;
   const completionPct = totalToday === 0 ? 0 : Math.round((completedToday / totalToday) * 100);
 
   useEffect(() => {
     if (totalToday > 0 && completedToday === totalToday) {
       setAllClear(true);
-      const timer = setTimeout(() => setAllClear(false), 2000);
+      const timer = setTimeout(() => setAllClear(false), 2400);
       return () => clearTimeout(timer);
     }
   }, [completedToday, totalToday]);
@@ -387,7 +595,7 @@ const ExpandedTasks = () => {
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTodo.trim()) return;
-    addTodo(newTodo, priority, category, time);
+    addTodo(newTodo.trim(), priority, category, time.trim());
     setNewTodo("");
     setTime("");
   };
@@ -398,256 +606,297 @@ const ExpandedTasks = () => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
-  // Calculate 7-day chart data
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    const dateStr = d.toISOString().split("T")[0];
-    const completedCount = todos.filter(t => t.completed && t.completedAt?.startsWith(dateStr)).length;
-    return {
-      day: d.toLocaleDateString("en-US", { weekday: "short" }),
-      count: completedCount,
-      isToday: i === 6
-    };
-  });
-  const maxTasks = Math.max(...last7Days.map(d => d.count), 1);
+  const last7Days = lastNDates(7).map((iso, i) => ({
+    iso,
+    day: new Date(`${iso}T00:00:00`).toLocaleDateString("en-US", { weekday: "short" }),
+    count: todos.filter((t) => t.completed && isOnLocalDate(t.completedAt, iso)).length,
+    isToday: i === 6,
+  }));
+
+  const maxTasks = Math.max(...last7Days.map((d) => d.count), 1);
   const weeklyTotal = last7Days.reduce((acc, d) => acc + d.count, 0);
-  
+
+  // Consecutive days with at least one completion, counting back from today.
+  // Today being empty does not break a run that is still live.
   let streak = 0;
   for (let i = 6; i >= 0; i--) {
     if (last7Days[i].count > 0) streak++;
-    else if (i !== 6) break; // Allow today to be 0 without breaking yesterday's streak yet
+    else if (i !== 6) break;
   }
 
   return (
-    <div className="flex flex-col h-full animate-float-up">
-      <div className="flex items-start justify-between mb-6">
+    <div className="flex h-full flex-col">
+      <div className="mb-6 flex items-start justify-between">
         <div>
-          <h2 className="text-2xl font-display text-white">Operational Queue</h2>
-          <p className="text-xs text-muted-foreground mono-font mt-1">Check your tasks and schedule</p>
+          <h2 className="font-display text-2xl text-white">Operational Queue</h2>
+          <p className="mono-font mt-1 text-xs text-muted-foreground">Check your tasks and schedule</p>
         </div>
-        <div className="relative w-12 h-12">
-          <svg className="w-full h-full -rotate-90" viewBox="0 0 50 50">
-            <circle cx="25" cy="25" r="22" fill="none" stroke="rgba(255, 255, 255, 0.1)" strokeWidth="3" />
-            <circle 
-              cx="25" cy="25" r="22" 
-              fill="none" 
-              stroke="#ffffff" 
-              strokeWidth="3" 
-              strokeLinecap="round"
-              strokeDasharray={138.2}
-              strokeDashoffset={138.2 - (completionPct / 100) * 138.2}
-              className="transition-all duration-1000 ease-out"
-            />
-          </svg>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <span className="mono-font text-[10px] text-white font-bold">{completionPct}%</span>
-          </div>
-        </div>
+        <Gauge value={completionPct / 100} size={48} strokeWidth={3}>
+          <AnimatedNumber value={completionPct} suffix="%" className="mono-font text-[10px] font-bold text-white" />
+        </Gauge>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-        {/* Left: Today's Tasks */}
-        <div className="flex flex-col border border-[#222] rounded-sm p-4 bg-[#111]">
-          <div className="flex justify-between items-center mb-4">
-            <span className="mono-font text-xs text-muted-foreground uppercase tracking-widest">Today</span>
-            <span className="mono-font text-[10px] text-white/40">{new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}</span>
+      <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2 md:gap-8">
+        {/* Today's queue */}
+        <div className="surface-well flex flex-col p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <span className="eyebrow">Today</span>
+            <span className="mono-font text-[10px] text-white/40">
+              {new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+            </span>
           </div>
 
-          <div className="w-full h-px bg-[#222] mb-4 relative overflow-hidden">
-            <div 
-              className="absolute top-0 left-0 bottom-0 bg-white transition-all duration-500 ease-out"
-              style={{ width: `${completionPct}%` }}
+          <div className="relative mb-4 h-px w-full overflow-hidden bg-white/10">
+            <motion.div
+              className="absolute inset-y-0 left-0 bg-white"
+              initial={{ width: 0 }}
+              animate={{ width: `${completionPct}%` }}
+              transition={{ duration: 0.6, ease: EASE_OUT }}
             />
-            {allClear && (
-              <div className="absolute inset-0 flex items-center justify-center bg-white z-10">
-                <span className="mono-font text-[8px] font-bold text-black tracking-widest">ALL CLEAR</span>
-              </div>
-            )}
+            <AnimatePresence>
+              {allClear && (
+                <motion.div
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={spring.snappy}
+                  className="absolute inset-0 z-10 flex origin-left items-center justify-center bg-white"
+                >
+                  <span className="mono-font text-[8px] font-bold tracking-[0.2em] text-black">ALL CLEAR</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          <div className="flex-1 overflow-auto no-scrollbar space-y-2 max-h-[200px] pr-1">
-            {sortedTodos.length === 0 ? (
-               <div className="h-full flex items-center justify-center border border-dashed border-[#222] rounded-sm py-8">
-                 <span className="text-xs text-muted-foreground">Queue is empty</span>
-               </div>
-            ) : (
-              sortedTodos.map(t => {
-                const glowClass = t.completed ? 'glow-completed' : `glow-${t.priority.toLowerCase()}`;
-                return (
-                  <div key={t.id} className={`flex items-center bg-[#141414] border border-[#222] rounded-sm group/todo transition-all hover:border-white/20 hover-scanline py-2 px-3 ${glowClass}`}>
-                    <button 
-                      className={`w-4 h-4 rounded-full border flex items-center justify-center mr-3 shrink-0 transition-colors ${t.completed ? 'bg-white border-transparent' : 'bg-[#0a0a0a] border-white/50 hover:border-white'}`}
-                      onClick={() => toggleTodo(t.id)}
-                    >
-                      {t.completed && <Check className="w-2.5 h-2.5 text-black" />}
-                    </button>
-                    
-                    <div className="flex-1 flex flex-col overflow-hidden">
-                      <div className="flex items-center gap-2">
-                        {t.category && (
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: CAT_COLORS[t.category] }} />
-                        )}
-                        <span className={`text-sm font-medium truncate ${t.completed ? 'opacity-40 animate-strikethrough' : 'text-white'}`}>
-                          {t.text}
-                        </span>
-                        {!t.completed && (
-                          <span className="text-[9px] mono-font uppercase px-1 border border-white/10 bg-[#0a0a0a] rounded-sm ml-auto shrink-0" style={{ color: PRIORITY_COLORS[t.priority] }}>
-                            [{t.priority}]
-                          </span>
-                        )}
-                        {!t.completed && t.estimatedTime && (
-                          <span className="text-[10px] mono-font text-muted-foreground shrink-0">
-                            {t.estimatedTime}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-[9px] text-muted-foreground mt-1 italic">
-                        Logged: {getRelativeTime(t.createdAt)}
-                      </span>
-                    </div>
-
-                    <button 
-                      onClick={() => deleteTodo(t.id)}
-                      className="ml-2 p-1.5 opacity-0 group-hover/todo:opacity-100 text-white/40 hover:bg-white/10 hover:text-white transition-all shrink-0 rounded-sm"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                );
-              })
-            )}
+          <div className="no-scrollbar max-h-[220px] flex-1 space-y-2 overflow-auto pr-1">
+            <AnimatePresence mode="popLayout" initial={false}>
+              {sortedTodos.length === 0 ? (
+                <motion.div
+                  key="empty"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="flex h-full items-center justify-center border border-dashed border-white/10 py-10"
+                >
+                  <span className="text-xs text-muted-foreground">Queue is empty</span>
+                </motion.div>
+              ) : (
+                sortedTodos.map((t) => (
+                  <TaskRow
+                    key={t.id}
+                    todo={t}
+                    onToggle={() => toggleTodo(t.id)}
+                    onDelete={() => deleteTodo(t.id)}
+                  />
+                ))
+              )}
+            </AnimatePresence>
           </div>
         </div>
 
-        {/* Right: Weekly Chart */}
-        <div className="flex flex-col border border-[#222] rounded-sm p-4 bg-[#111]">
-           <div className="flex gap-4 mb-6">
-              <div className="flex flex-col border border-[#222] bg-[#0a0a0a] rounded-sm px-3 py-2 flex-1">
-                <span className="mono-font text-[9px] text-muted-foreground mb-1 uppercase tracking-wider">This Week</span>
-                <span className="font-display text-xl text-white">{weeklyTotal} <span className="text-sm text-white/40 font-sans">tasks</span></span>
-              </div>
-              <div className="flex flex-col border border-[#222] bg-[#0a0a0a] rounded-sm px-3 py-2 flex-1">
-                <span className="mono-font text-[9px] text-muted-foreground mb-1 uppercase tracking-wider">Streak</span>
-                <span className="font-display text-xl text-white">{streak} <span className="text-sm text-white/40 font-sans">days</span></span>
-              </div>
-           </div>
+        {/* Weekly chart */}
+        <div className="surface-well flex flex-col p-4">
+          <div className="mb-6 flex gap-4">
+            <div className="flex flex-1 flex-col border border-white/[0.07] bg-[#0a0a0a] px-3 py-2">
+              <span className="eyebrow mb-1">This week</span>
+              <span className="font-display text-xl text-white">
+                <AnimatedNumber value={weeklyTotal} />{" "}
+                <span className="font-sans text-sm text-white/40">tasks</span>
+              </span>
+            </div>
+            <div className="flex flex-1 flex-col border border-white/[0.07] bg-[#0a0a0a] px-3 py-2">
+              <span className="eyebrow mb-1">Streak</span>
+              <span className="font-display text-xl text-white">
+                <AnimatedNumber value={streak} />{" "}
+                <span className="font-sans text-sm text-white/40">days</span>
+              </span>
+            </div>
+          </div>
 
-           <div className="flex-1 flex items-end gap-2 h-[120px] mt-auto">
-              {last7Days.map((day, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2 group">
-                  <div className="w-full relative h-full flex flex-col justify-end group-hover:bg-white/5 transition-colors rounded-sm">
-                    {day.count > 0 && (
-                      <div 
-                        className={`w-full rounded-sm transition-all duration-1000 ${day.isToday ? 'bg-white' : 'bg-[#333]'}`}
-                        style={{ height: `${Math.max((day.count / maxTasks) * 100, 10)}%` }}
-                      />
-                    )}
-                    <span className="absolute -top-6 left-1/2 -translate-x-1/2 mono-font text-[10px] text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                      {day.count}
-                    </span>
-                  </div>
-                  <span className={`mono-font text-[9px] ${day.isToday ? 'text-white' : 'text-muted-foreground'}`}>{day.day}</span>
+          <div className="mt-auto flex h-[140px] items-stretch gap-2">
+            {last7Days.map((day, i) => (
+              <div key={day.iso} className="group flex flex-1 flex-col items-center gap-2">
+                <div className="relative flex w-full flex-1 flex-col justify-end rounded-sm transition-colors group-hover:bg-white/5">
+                  <motion.div
+                    className={day.isToday ? "w-full bg-white" : "w-full bg-white/20"}
+                    initial={{ height: 0 }}
+                    animate={{ height: day.count > 0 ? `${Math.max((day.count / maxTasks) * 100, 8)}%` : "0%" }}
+                    transition={{ duration: 0.7, ease: EASE_OUT, delay: i * 0.05 }}
+                    style={{ boxShadow: day.isToday && day.count > 0 ? "0 0 12px rgba(255,255,255,0.3)" : undefined }}
+                  />
+                  <span className="mono-font absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                    {day.count}
+                  </span>
                 </div>
-              ))}
-           </div>
+                <span className={`mono-font text-[9px] ${day.isToday ? "text-white" : "text-muted-foreground"}`}>
+                  {day.day}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      <div className="mt-auto">
-        <form onSubmit={handleAdd} className="flex items-center bg-[#111] border border-[#222] rounded-sm overflow-hidden focus-within:border-white/30 focus-within:ring-1 focus-within:ring-white/10 transition-all">
-          <input
-            type="text"
-            placeholder="Task name ———"
-            value={newTodo}
-            onChange={(e) => setNewTodo(e.target.value)}
-            className="flex-1 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-muted-foreground"
-          />
-          <div className="w-px h-4 bg-[#222]" />
-          <input
-            type="text"
-            placeholder="~30m"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="w-16 bg-transparent px-2 py-2 text-xs mono-font outline-none placeholder:text-muted-foreground text-center"
-          />
-          <div className="w-px h-4 bg-[#222]" />
-          <select 
-            value={priority} 
-            onChange={e => setPriority(e.target.value as PriorityLevel)}
-            className="w-14 bg-transparent px-2 py-2 text-[10px] mono-font outline-none text-center"
-            style={{ color: PRIORITY_COLORS[priority] }}
-          >
-            <option value="P1" className="text-black">P1▾</option>
-            <option value="P2" className="text-black">P2▾</option>
-            <option value="P3" className="text-black">P3▾</option>
-          </select>
-          <div className="w-px h-4 bg-[#222]" />
-          <select 
-            value={category} 
-            onChange={e => setCategory(e.target.value as TodoCategory)}
-            className="w-20 bg-transparent px-2 py-2 text-[10px] mono-font outline-none text-center"
-          >
-            <option value="Work" className="text-black">● Work</option>
-            <option value="Study" className="text-black">● Study</option>
-            <option value="Personal" className="text-black">● PRS</option>
-            <option value="Health" className="text-black">● HLT</option>
-          </select>
-          <button type="submit" className="bg-white text-black font-bold px-4 py-2 text-[10px] mono-font uppercase tracking-wider hover:bg-gray-200 transition-colors">
-            + ADD
-          </button>
-        </form>
-      </div>
+      <form
+        onSubmit={handleAdd}
+        className="mt-auto flex items-center overflow-hidden border border-white/10 bg-white/[0.02] transition-all focus-within:border-white/30 focus-within:bg-white/[0.04]"
+      >
+        <input
+          type="text"
+          placeholder="Task name ———"
+          value={newTodo}
+          onChange={(e) => setNewTodo(e.target.value)}
+          className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground"
+        />
+        <span className="h-4 w-px bg-white/10" />
+        <input
+          type="text"
+          placeholder="~30m"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+          className="mono-font w-16 bg-transparent px-2 py-2.5 text-center text-xs outline-none placeholder:text-muted-foreground"
+          aria-label="Estimated time"
+        />
+        <span className="h-4 w-px bg-white/10" />
+        <select
+          value={priority}
+          onChange={(e) => setPriority(e.target.value as PriorityLevel)}
+          className="mono-font w-14 bg-transparent px-2 py-2.5 text-center text-[10px] outline-none"
+          style={{ color: PRIORITY_COLORS[priority] }}
+          aria-label="Priority"
+        >
+          <option value="P1">P1</option>
+          <option value="P2">P2</option>
+          <option value="P3">P3</option>
+        </select>
+        <span className="h-4 w-px bg-white/10" />
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value as TodoCategory)}
+          className="mono-font w-24 bg-transparent px-2 py-2.5 text-center text-[10px] outline-none"
+          aria-label="Category"
+        >
+          <option value="Work">Work</option>
+          <option value="Study">Study</option>
+          <option value="Personal">Personal</option>
+          <option value="Health">Health</option>
+        </select>
+        <motion.button
+          whileTap={tap}
+          type="submit"
+          className="mono-font flex items-center gap-1 bg-white px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-black transition-colors hover:bg-gray-200"
+        >
+          <Plus className="h-3 w-3" /> Add
+        </motion.button>
+      </form>
     </div>
   );
 };
 
-// --- MAIN COMPONENT ---
+/* ------------------------------------------------------------------ */
+/* Shell                                                               */
+/* ------------------------------------------------------------------ */
 
 export const MissionControlHUD = () => {
-  const [viewState, setViewState] = useState<"collapsed" | "expanded">("collapsed");
+  const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<"OBJECTIVES" | "TASKS">("OBJECTIVES");
 
-  if (viewState === "expanded") {
-    return (
-      <div className="glass-card rounded-sm p-6 relative flex flex-col h-full min-h-[500px]">
-        <div className="absolute top-6 right-6">
-           <button 
-             onClick={() => setViewState("collapsed")}
-             className="mono-font text-[10px] text-muted-foreground hover:text-white uppercase tracking-wider transition-colors flex items-center gap-1"
-           >
-             Close ✕
-           </button>
-        </div>
-        
-        <div className="flex gap-4 mb-8 border-b border-white/10 pb-2">
-          <button 
-            className={`mono-font text-sm font-bold tracking-widest uppercase transition-colors relative pb-2 ${activeTab === "OBJECTIVES" ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
-            onClick={() => setActiveTab("OBJECTIVES")}
-          >
-            Objectives
-            {activeTab === "OBJECTIVES" && <div className="absolute bottom-0 left-0 right-0 h-px bg-white" />}
-          </button>
-          <button 
-            className={`mono-font text-sm font-bold tracking-widest uppercase transition-colors relative pb-2 ${activeTab === "TASKS" ? 'text-white' : 'text-white/40 hover:text-white/70'}`}
-            onClick={() => setActiveTab("TASKS")}
-          >
-            Tasks
-            {activeTab === "TASKS" && <div className="absolute bottom-0 left-0 right-0 h-px bg-white" />}
-          </button>
-        </div>
-
-        <div className="flex-1">
-          {activeTab === "OBJECTIVES" ? <ExpandedObjectives /> : <ExpandedTasks />}
-        </div>
-      </div>
-    );
-  }
+  // Escape collapses the expanded view.
+  useEffect(() => {
+    if (!expanded) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setExpanded(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [expanded]);
 
   return (
-    <div className="glass-card rounded-sm p-6 flex items-stretch min-h-[350px]">
-      <CollapsedObjectives onExpand={() => { setViewState("expanded"); setActiveTab("OBJECTIVES"); }} />
-      <CollapsedTasks onExpand={() => { setViewState("expanded"); setActiveTab("TASKS"); }} />
-    </div>
+    <LayoutGroup id="mission-control">
+      <SpotlightCard
+        layout
+        transition={spring.layout}
+        className={`rounded-sm p-6 ${expanded ? "min-h-[540px]" : "min-h-[350px]"}`}
+        interactive={!expanded}
+      >
+        <AnimatePresence mode="wait" initial={false}>
+          {expanded ? (
+            <motion.div
+              key="expanded"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: EASE_OUT }}
+              className="flex h-full flex-col"
+            >
+              <div className="absolute right-6 top-6 z-10">
+                <motion.button
+                  type="button"
+                  whileHover={{ rotate: 90 }}
+                  whileTap={tap}
+                  transition={spring.snappy}
+                  onClick={() => setExpanded(false)}
+                  aria-label="Collapse"
+                  className="p-1.5 text-muted-foreground transition-colors hover:text-white"
+                >
+                  <X className="h-4 w-4" />
+                </motion.button>
+              </div>
+
+              <div className="mb-8 flex gap-5 border-b border-white/10 pb-2">
+                {(["OBJECTIVES", "TASKS"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setActiveTab(tab)}
+                    className={`mono-font relative pb-2 text-sm font-bold uppercase tracking-[0.15em] transition-colors ${
+                      activeTab === tab ? "text-white" : "text-white/35 hover:text-white/70"
+                    }`}
+                  >
+                    {tab.toLowerCase()}
+                    {activeTab === tab && (
+                      <motion.span
+                        layoutId="mc-tab-underline"
+                        className="absolute inset-x-0 -bottom-[2px] h-px bg-white"
+                        transition={spring.layout}
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex-1">
+                <AnimatePresence mode="wait" initial={false}>
+                  <motion.div
+                    key={activeTab}
+                    initial={{ opacity: 0, x: activeTab === "TASKS" ? 18 : -18 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: activeTab === "TASKS" ? -18 : 18 }}
+                    transition={{ duration: 0.28, ease: EASE_OUT }}
+                    className="h-full"
+                  >
+                    {activeTab === "OBJECTIVES" ? <ExpandedObjectives /> : <ExpandedTasks />}
+                  </motion.div>
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="collapsed"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 10 }}
+              transition={{ duration: 0.28, ease: EASE_OUT }}
+              className="flex flex-col items-stretch md:flex-row"
+            >
+              <CollapsedObjectives
+                onExpand={() => { setExpanded(true); setActiveTab("OBJECTIVES"); }}
+              />
+              <CollapsedTasks onExpand={() => { setExpanded(true); setActiveTab("TASKS"); }} />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </SpotlightCard>
+    </LayoutGroup>
   );
 };

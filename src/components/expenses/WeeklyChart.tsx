@@ -1,69 +1,98 @@
-import { motion } from "framer-motion";
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
+import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useExpenses } from "@/lib/expenses-context";
 import { useCurrency } from "@/lib/currency-context";
+import { SpotlightCard } from "@/components/motion/SpotlightCard";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
+
+interface TooltipPayload {
+  active?: boolean;
+  payload?: Array<{ value: number; payload: { date: string } }>;
+}
+
+/** Matches the app's surfaces instead of recharts' default white box. */
+const ChartTooltip = ({ active, payload, format }: TooltipPayload & { format: (n: number) => string }) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="border border-white/15 bg-[#0d0d0d]/95 px-3 py-2 shadow-[0_16px_40px_-12px_rgba(0,0,0,0.9)] backdrop-blur-md">
+      <p className="mono-font text-[10px] uppercase tracking-wider text-muted-foreground">
+        {payload[0].payload.date}
+      </p>
+      <p className="mt-0.5 text-sm font-medium text-white">{format(payload[0].value)}</p>
+    </div>
+  );
+};
 
 export const WeeklyChart = () => {
   const { last7Days } = useExpenses();
   const { formatAmount, currency } = useCurrency();
 
   const maxValue = Math.max(...last7Days.map((d) => d.total), 1);
+  const weekTotal = last7Days.reduce((s, d) => s + d.total, 0);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.6, delay: 0.2 }}
-      className="bg-[#121212] border border-white/5 rounded-sm shadow-sm overflow-hidden"
-    >
-      <div className="px-6 md:px-8 py-6 border-b border-white/5 flex items-center justify-between">
+    <SpotlightCard className="h-full rounded-sm" reveal delay={0.1}>
+      <div className="flex items-center justify-between border-b border-white/5 px-6 py-6 md:px-8">
         <div>
           <h2 className="font-display text-xl">Daily Spending</h2>
-          <p className="text-xs text-muted-foreground mt-1">Last 7 days</p>
+          <p className="mt-1 text-xs text-muted-foreground">Last 7 days</p>
         </div>
-        <span className="font-mono text-xs text-muted-foreground">PEAK {formatAmount(maxValue, 0)}</span>
+        <div className="text-right">
+          <p className="hud-label">Week total</p>
+          <p className="text-sm font-medium text-white">
+            <AnimatedNumber value={weekTotal} format={(n) => formatAmount(n, 0)} />
+          </p>
+        </div>
       </div>
 
       <div className="p-6 md:p-8">
         <ResponsiveContainer width="100%" height={240}>
-          <AreaChart data={last7Days}>
+          <AreaChart data={last7Days} margin={{ top: 8, right: 4, left: -8, bottom: 0 }}>
             <defs>
-              <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.5} />
-                <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+              <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity={0.35} />
+                <stop offset="70%" stopColor="#ffffff" stopOpacity={0.04} />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity={0} />
               </linearGradient>
             </defs>
+
             <XAxis
               dataKey="date"
               axisLine={false}
               tickLine={false}
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
+              dy={6}
             />
             <YAxis
               axisLine={false}
               tickLine={false}
+              width={52}
               tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11 }}
-              tickFormatter={(v) => `${currency === "INR" ? "₹" : "$"}${v}`}
+              tickFormatter={(v) => `${currency === "INR" ? "₹" : "$"}${v >= 1000 ? `${Math.round(v / 1000)}k` : v}`}
+              domain={[0, Math.ceil(maxValue * 1.15)]}
             />
             <Tooltip
-              contentStyle={{
-                backgroundColor: "#1a1a1a",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                borderRadius: "0.125rem",
-                fontFamily: "Inter, sans-serif",
-              }}
-              formatter={(value: number) => [formatAmount(value, 0), "Spent"]}
+              cursor={{ stroke: "rgba(255,255,255,0.18)", strokeWidth: 1, strokeDasharray: "3 3" }}
+              content={<ChartTooltip format={(n) => formatAmount(n, 0)} />}
             />
             <Area
               type="monotone"
               dataKey="total"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2}
-              fill="url(#colorTotal)"
+              stroke="#ffffff"
+              strokeWidth={1.75}
+              fill="url(#spendFill)"
+              animationDuration={1000}
+              animationEasing="ease-out"
+              dot={{ r: 0 }}
+              activeDot={{
+                r: 4,
+                fill: "#ffffff",
+                stroke: "#0a0a0a",
+                strokeWidth: 2,
+              }}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
-    </motion.div>
+    </SpotlightCard>
   );
 };

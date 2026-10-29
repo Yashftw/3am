@@ -1,0 +1,58 @@
+rules_version = '2';
+
+// Security rules for the "am-log" Firestore database.
+//
+// Every document the app writes carries a `user_id` field holding the owner's
+// Firebase Auth uid, and every read is a collection query constrained by
+// `where("user_id", "==", uid)`. These rules mirror that exactly: a signed-in
+// user can see and change their own documents and nothing else.
+//
+// Note on queries: Firestore evaluates rules against the *query*, not the
+// documents it would return. A query is only allowed if the rules can prove
+// from its constraints that it cannot read anything the caller is not
+// entitled to. The `user_id` equality filter is what makes that provable, so
+// the field name here must match the one the client filters on — a mismatch
+// (for example `userId` here vs `user_id` in the client) rejects the whole
+// query with permission-denied even when the collection is empty.
+//
+// Deploy with:
+//   firebase deploy --only firestore:rules
+// or paste into Firebase console -> Firestore Database -> Rules.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // The document being read/replaced belongs to the caller.
+    function ownsExisting() {
+      return signedIn() && resource.data.user_id == request.auth.uid;
+    }
+
+    // The document being written is stamped with the caller's own uid, so a
+    // user cannot create records owned by someone else.
+    function ownsIncoming() {
+      return signedIn() && request.resource.data.user_id == request.auth.uid;
+    }
+
+    // The collections this app uses. Listed explicitly rather than with a
+    // wildcard so a future collection is closed by default instead of
+    // inheriting access nobody thought about.
+    match /{collection}/{docId} {
+      allow read: if ownsExisting()
+        && collection in ['expenses', 'sleep', 'workouts', 'goals', 'todos', 'settings'];
+
+      allow create: if ownsIncoming()
+        && collection in ['expenses', 'sleep', 'workouts', 'goals', 'todos', 'settings'];
+
+      // Both sides must be owned, so a document cannot be reassigned away.
+      allow update: if ownsExisting() && ownsIncoming()
+        && collection in ['expenses', 'sleep', 'workouts', 'goals', 'todos', 'settings'];
+
+      allow delete: if ownsExisting()
+        && collection in ['expenses', 'sleep', 'workouts', 'goals', 'todos', 'settings'];
+    }
+  }
+}

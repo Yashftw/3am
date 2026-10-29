@@ -1,62 +1,80 @@
-import { useDashboard } from "@/lib/dashboard-context";
+import { motion } from "framer-motion";
+import { useDashboard, todosForDate } from "@/lib/dashboard-context";
+import { lastNDates, toLocalISODate } from "@/lib/date-utils";
+import { AnimatedNumber } from "@/components/motion/AnimatedNumber";
+import { EASE_OUT } from "@/lib/motion";
+
+interface Stat {
+  label: string;
+  value: string;
+  /** Numeric part, counted up; the string is used when there is nothing to count. */
+  numeric?: number;
+  decimals?: number;
+  suffix?: string;
+}
 
 export const GlobalStatsBar = () => {
   const { streak, sleepData, workoutData, todos, goals } = useDashboard();
 
-  const avgSleep = (() => {
-    if (sleepData.length === 0) return "--";
-    const last7 = sleepData.slice(-7);
-    const sum = last7.reduce((acc, curr) => acc + curr.hours, 0);
-    return (sum / last7.length).toFixed(1) + "h";
-  })();
+  const recentSleep = [...sleepData]
+    .sort((a, b) => (a.date < b.date ? 1 : -1))
+    .slice(0, 7);
+  const avgSleep = recentSleep.length
+    ? recentSleep.reduce((acc, s) => acc + s.hours, 0) / recentSleep.length
+    : null;
 
-  const workoutsThisWeek = (() => {
-    const today = new Date();
-    const oneWeekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    return workoutData.filter(w => new Date(w.date) >= oneWeekAgo).length;
-  })();
+  const week = lastNDates(7);
+  const workoutsThisWeek = workoutData.filter((w) => week.includes(w.date)).length;
 
-  const tasksDoneToday = (() => {
-    const todayStr = new Date().toISOString().split("T")[0];
-    const todayTodos = todos.filter(t => t.createdAt.startsWith(todayStr) || (t.completedAt && t.completedAt.startsWith(todayStr)));
-    const done = todayTodos.filter(t => t.completed).length;
-    return `${done}/${todayTodos.length}`;
-  })();
+  const todayTodos = todosForDate(todos, toLocalISODate());
+  const doneToday = todayTodos.filter((t) => t.completed).length;
 
-  const activeGoals = goals.filter(g => !g.completed).length;
+  const activeGoals = goals.filter((g) => !g.completed).length;
+
+  const stats: Stat[] = [
+    { label: "Streak", value: `${streak} days`, numeric: streak, suffix: " days" },
+    {
+      label: "Avg sleep",
+      value: avgSleep === null ? "--" : `${avgSleep.toFixed(1)}h`,
+      numeric: avgSleep ?? undefined,
+      decimals: 1,
+      suffix: "h",
+    },
+    { label: "Weekly workouts", value: String(workoutsThisWeek), numeric: workoutsThisWeek },
+    { label: "Tasks today", value: `${doneToday}/${todayTodos.length}` },
+    { label: "Active goals", value: String(activeGoals), numeric: activeGoals },
+  ];
 
   return (
-    <div className="w-full border-y border-white/5 bg-[#0a0a0a] py-3 overflow-x-auto no-scrollbar">
-      <div className="max-w-[1600px] mx-auto px-6 md:px-12 flex items-center gap-8 md:gap-16 min-w-max text-sm text-muted-foreground">
-        
-        <div className="flex items-center gap-2">
-          <span>Streak: <span className="text-white font-bold">{streak} days</span></span>
-        </div>
-
-        <div className="w-px h-4 bg-white/10" />
-
-        <div className="flex items-center gap-2">
-          <span>Avg Sleep: <span className="text-white font-bold">{avgSleep}</span></span>
-        </div>
-
-        <div className="w-px h-4 bg-white/10" />
-
-        <div className="flex items-center gap-2">
-          <span>Weekly Workouts: <span className="text-white font-bold">{workoutsThisWeek}</span></span>
-        </div>
-
-        <div className="w-px h-4 bg-white/10" />
-
-        <div className="flex items-center gap-2">
-          <span>Tasks Today: <span className="text-white font-bold">{tasksDoneToday}</span></span>
-        </div>
-
-        <div className="w-px h-4 bg-white/10" />
-
-        <div className="flex items-center gap-2">
-          <span>Active Goals: <span className="text-white font-bold">{activeGoals}</span></span>
-        </div>
-
+    <div className="no-scrollbar w-full overflow-x-auto border-y border-white/[0.07] bg-[#0a0a0a]/70 py-3 backdrop-blur-sm">
+      <div className="mx-auto flex min-w-max max-w-[1600px] items-center gap-7 px-6 text-sm text-muted-foreground md:gap-14 md:px-12">
+        {stats.map((stat, i) => (
+          <motion.div
+            key={stat.label}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 + i * 0.07, duration: 0.5, ease: EASE_OUT }}
+            className="flex items-center gap-7 md:gap-14"
+          >
+            <span className="whitespace-nowrap">
+              <span className="mono-font text-[10px] uppercase tracking-[0.18em] text-muted-foreground/70">
+                {stat.label}
+              </span>{" "}
+              <span className="font-bold text-white">
+                {stat.numeric !== undefined ? (
+                  <AnimatedNumber
+                    value={stat.numeric}
+                    decimals={stat.decimals ?? 0}
+                    suffix={stat.suffix ?? ""}
+                  />
+                ) : (
+                  stat.value
+                )}
+              </span>
+            </span>
+            {i < stats.length - 1 && <span className="h-3.5 w-px bg-white/10" />}
+          </motion.div>
+        ))}
       </div>
     </div>
   );

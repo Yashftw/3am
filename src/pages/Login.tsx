@@ -1,22 +1,48 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Mail, Lock, Loader2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
+import { Eye, EyeOff, Loader2, Lock, Mail } from "lucide-react";
 import { useUser } from "@/lib/user-context";
 import { toast } from "sonner";
+import { EASE_OUT, spring, tap } from "@/lib/motion";
+
+/** Firebase auth codes are not sentences; these are. */
+function describeAuthError(err: unknown): string {
+  const code = typeof err === "object" && err !== null && "code" in err ? String((err as { code: unknown }).code) : "";
+  switch (code) {
+    case "auth/invalid-email":
+      return "That email address doesn't look right.";
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+    case "auth/user-not-found":
+      return "Email or password is incorrect.";
+    case "auth/email-already-in-use":
+      return "An account already exists for that email.";
+    case "auth/weak-password":
+      return "Choose a password of at least 6 characters.";
+    case "auth/too-many-requests":
+      return "Too many attempts. Wait a moment and try again.";
+    case "auth/network-request-failed":
+      return "No connection. Check your network and try again.";
+    default:
+      return err instanceof Error ? err.message : "Something went wrong. Try again.";
+  }
+}
 
 export default function Login() {
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const { login, signup } = useUser();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error("Please enter both email and password.");
+      toast.error("Enter both email and password.");
       return;
     }
 
@@ -24,96 +50,149 @@ export default function Login() {
     try {
       if (isSignUp) {
         await signup(email, password);
-        toast.success("Account created successfully!");
+        toast.success("Account created", { description: "Welcome to 3am." });
       } else {
         await login(email, password);
-        toast.success("Logged in successfully!");
+        toast.success("Welcome back");
       }
       navigate("/");
-    } catch (err: any) {
-      toast.error(err.message || "An error occurred during authentication.");
+    } catch (err) {
+      toast.error(isSignUp ? "Couldn't create that account" : "Couldn't sign you in", {
+        description: describeAuthError(err),
+      });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 md:p-12 relative z-10 bg-transparent">
-      <div className="w-full max-w-[1200px] h-auto md:h-[700px] min-h-[600px] bg-black/40 border border-white/10 backdrop-blur-md rounded-sm overflow-hidden flex shadow-elegant">
-        
-        {/* Left Side: Form */}
-        <div className="w-full md:w-1/2 p-6 md:p-10 lg:p-16 flex flex-col justify-center relative">
-          
-          <div className="absolute top-8 left-8 flex items-center gap-2 group cursor-pointer">
-            <div className="h-2 w-2 bg-white animate-pulse shadow-[0_0_10px_#ffffff]" />
-            <span className="display-font text-lg tracking-widest text-foreground group-hover:text-white transition-colors">
-              3am
-            </span>
+    <div className="relative z-10 flex min-h-screen items-center justify-center bg-transparent p-4 md:p-12">
+      <motion.div
+        initial={{ opacity: 0, y: 24, scale: 0.985, filter: "blur(8px)" }}
+        animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
+        transition={{ duration: 0.85, ease: EASE_OUT }}
+        className="surface-card flex h-auto min-h-[600px] w-full max-w-[1200px] overflow-hidden rounded-sm shadow-elegant md:h-[700px]"
+      >
+        {/* Form */}
+        <div className="relative flex w-full flex-col justify-center p-6 md:w-1/2 md:p-10 lg:p-16">
+          <div className="absolute left-8 top-8 flex items-center gap-2">
+            <motion.span
+              className="h-2 w-2 bg-white"
+              animate={{ opacity: [1, 0.3, 1] }}
+              transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+              style={{ boxShadow: "0 0 10px #fff" }}
+            />
+            <span className="display-font text-lg tracking-[0.2em] text-foreground">3am</span>
           </div>
 
-          <div className="max-w-[360px] w-full mx-auto space-y-8">
-            
-            <div className="flex justify-center mb-12">
-              <div className="w-16 h-16 border-2 border-foreground rounded-full flex items-center justify-center relative group">
-                <div className="w-full h-0.5 bg-foreground absolute rotate-45 transform group-hover:bg-white transition-colors" />
-                <div className="w-full h-full border-[3px] border-transparent border-t-foreground border-r-foreground rounded-full absolute group-hover:border-t-white group-hover:border-r-white transition-colors" />
-              </div>
+          <div className="mx-auto w-full max-w-[360px] space-y-8">
+            {/* Mark */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.7, rotate: -20 }}
+              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              transition={{ ...spring.gentle, delay: 0.2 }}
+              // Clears the absolutely-positioned wordmark on narrow screens.
+              className="mb-12 mt-10 flex justify-center md:mt-0"
+            >
+              <motion.div
+                whileHover={{ rotate: 90 }}
+                transition={spring.gentle}
+                className="group relative flex h-16 w-16 items-center justify-center rounded-full border-2 border-foreground"
+              >
+                <div className="absolute h-0.5 w-full rotate-45 transform bg-foreground transition-colors group-hover:bg-white" />
+                <div className="absolute h-full w-full rounded-full border-[3px] border-transparent border-r-foreground border-t-foreground transition-colors group-hover:border-r-white group-hover:border-t-white" />
+              </motion.div>
+            </motion.div>
+
+            {/* Heading swaps with the mode */}
+            <div className="min-h-[68px]">
+              <AnimatePresence mode="wait" initial={false}>
+                <motion.div
+                  key={isSignUp ? "signup" : "login"}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.28, ease: EASE_OUT }}
+                >
+                  <h2 className="mb-2 font-display text-2xl text-gradient">
+                    {isSignUp ? "Create an account" : "Welcome back"}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {isSignUp ? "Start tracking your missions today." : "Enter your credentials to continue."}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
             </div>
 
-            <div>
-              <h2 className="text-2xl font-display text-white mb-2">{isSignUp ? 'Create an account' : 'Welcome back'}</h2>
-              <p className="text-sm text-muted-foreground">{isSignUp ? 'Start tracking your missions today.' : 'Enter your credentials to continue.'}</p>
-            </div>
-
-            <form className="space-y-6" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleSubmit}>
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground/90">Email</label>
+                <label htmlFor="email" className="text-sm font-semibold text-foreground/90">
+                  Email
+                </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input 
-                    type="email" 
+                  <Mail className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
                     placeholder="hello@0.email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-[#121212] border border-[#222] text-foreground focus:border-white focus:ring-1 focus:ring-white/30 transition-all rounded-sm py-3 pl-10 pr-4 text-sm outline-none"
+                    className="hud-input w-full py-3 pl-10 pr-4 text-sm"
                     required
                   />
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-semibold text-foreground/90">Password</label>
+                <label htmlFor="password" className="text-sm font-semibold text-foreground/90">
+                  Password
+                </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input 
-                    type="password" 
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    autoComplete={isSignUp ? "new-password" : "current-password"}
                     placeholder="Your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full bg-[#121212] border border-[#222] text-foreground focus:border-white focus:ring-1 focus:ring-white/30 transition-all rounded-sm py-3 pl-10 pr-4 text-sm outline-none"
+                    className="hud-input w-full py-3 pl-10 pr-11 text-sm"
                     required
                     minLength={6}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground transition-colors hover:text-white"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
                 </div>
+                {isSignUp && (
+                  <p className="text-[11px] text-muted-foreground/70">At least 6 characters.</p>
+                )}
               </div>
 
-              <button 
-                type="submit" 
+              <motion.button
+                whileTap={tap}
+                type="submit"
                 disabled={loading}
-                className="w-full bg-white text-black hover:bg-gray-200 transition-colors py-3 rounded-sm font-semibold mt-2 flex items-center justify-center gap-2"
+                className="hud-button mt-2 flex w-full items-center justify-center gap-2 py-3"
               >
-                {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-                {isSignUp ? "Sign Up" : "Login"}
-              </button>
+                {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                {isSignUp ? "Sign up" : "Login"}
+              </motion.button>
             </form>
 
             <div className="text-center">
-              <span className="text-muted-foreground text-xs">
+              <span className="text-xs text-muted-foreground">
                 {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
-                <button 
+                <button
                   type="button"
-                  onClick={() => setIsSignUp(!isSignUp)} 
-                  className="text-white hover:text-white/70 transition-colors underline underline-offset-2"
+                  onClick={() => setIsSignUp((v) => !v)}
+                  className="text-white underline underline-offset-4 transition-colors hover:text-white/70"
                 >
                   {isSignUp ? "Login" : "Sign up"}
                 </button>
@@ -122,17 +201,35 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Right Side */}
-        <div className="hidden md:block w-1/2 relative bg-black border-l border-white/10 overflow-hidden">
-           <img 
-            src="/pillars.png" 
-            alt="Classical Pillars" 
-            className="w-full h-full object-cover opacity-80"
+        {/* Artwork */}
+        <div className="relative hidden w-1/2 overflow-hidden border-l border-white/10 bg-black md:block">
+          <motion.img
+            src="/pillars.png"
+            alt=""
+            aria-hidden
+            initial={{ scale: 1.14, opacity: 0 }}
+            animate={{ scale: 1, opacity: 0.8 }}
+            transition={{ duration: 1.6, ease: EASE_OUT }}
+            className="h-full w-full object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-l from-transparent to-black/80" />
-        </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
 
-      </div>
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.6, ease: EASE_OUT }}
+            className="absolute bottom-10 left-10 right-10"
+          >
+            <p className="eyebrow mb-2">Track quietly</p>
+            <p className="font-display text-xl leading-snug text-white/90">
+              Sleep, training, tasks and spending —
+              <br />
+              in one place, every night.
+            </p>
+          </motion.div>
+        </div>
+      </motion.div>
     </div>
   );
 }

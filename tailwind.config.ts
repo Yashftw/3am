@@ -1,4 +1,5 @@
 import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 export default {
   darkMode: ["class"],
@@ -79,9 +80,16 @@ export default {
         },
       },
       borderRadius: {
+        // --radius is 0 (sharp edges). max() keeps the derived sizes from
+        // resolving to negative lengths, which some engines reject outright.
         lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        md: "max(0px, calc(var(--radius) - 2px))",
+        sm: "max(0px, calc(var(--radius) - 4px))",
+      },
+      transitionTimingFunction: {
+        "out-expo": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "in-out-quart": "cubic-bezier(0.65, 0, 0.35, 1)",
+        snap: "cubic-bezier(0.25, 1, 0.5, 1)",
       },
       keyframes: {
         "accordion-down": {
@@ -102,10 +110,10 @@ export default {
         },
       },
       animation: {
-        "accordion-down": "accordion-down 0.2s ease-out",
-        "accordion-up": "accordion-up 0.2s ease-out",
+        "accordion-down": "accordion-down 0.28s cubic-bezier(0.16, 1, 0.3, 1)",
+        "accordion-up": "accordion-up 0.22s cubic-bezier(0.65, 0, 0.35, 1)",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [tailwindcssAnimate],
 } satisfies Config;
