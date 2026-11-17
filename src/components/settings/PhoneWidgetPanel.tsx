@@ -23,7 +23,7 @@ const STEPS: Record<Platform, { title: string; steps: string[] }> = {
   ios: {
     title: "On iPhone",
     steps: [
-      "Open this page in Safari (not Chrome — only Safari can install).",
+      "Open this page in Safari (not Chrome; only Safari can install).",
       "Tap the Share button, then Add to Home Screen.",
       "Name the tile after the view, for example “Tasks”.",
       "Repeat for any other view you want its own tile for.",
@@ -51,7 +51,7 @@ const STEPS: Record<Platform, { title: string; steps: string[] }> = {
 /**
  * Getting the summary onto a phone.
  *
- * Neither iOS nor Android lets a web app publish a real home-screen widget —
+ * Neither iOS nor Android lets a web app publish a real home-screen widget;
  * WidgetKit and App Widgets are native-only surfaces. Rather than pretend
  * otherwise, this panel sets up the two things that genuinely work: a
  * home-screen tile that opens straight to the glanceable summary, and a live
@@ -206,11 +206,11 @@ export const PhoneWidgetPanel = () => {
         {!supported ? (
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground/70">
             Your browser doesn't support icon badges. Android Chrome in particular never
-            implemented this — the tile above still works there.
+            implemented this, but the tile above still works there.
           </p>
         ) : !installed ? (
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground/70">
-            Install the app to your home screen first — badges only appear on an installed icon.
+            Install the app to your home screen first. Badges only appear on an installed icon.
           </p>
         ) : null}
       </div>
@@ -218,8 +218,8 @@ export const PhoneWidgetPanel = () => {
       {/* The honest caveat */}
       <p className="mt-6 border-t border-white/5 pt-5 text-xs leading-relaxed text-muted-foreground/60">
         These are tiles you tap, not live widgets. The resizable kind that renders
-        without opening anything can only be built by a native app — iOS and Android
-        both keep those surfaces closed to web apps — so tiles and the icon badge are
+        without opening anything can only be built by a native app (iOS and Android
+        both keep those surfaces closed to web apps), so tiles and the icon badge are
         as far as this goes without a separate native build.
       </p>
     </SpotlightCard>

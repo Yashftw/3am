@@ -37,7 +37,7 @@ export const BudgetInsights = () => {
       label: "vs last month",
       value:
         report.spending.changePct === null
-          ? "—"
+          ? "-"
           : `${report.spending.changePct > 0 ? "+" : ""}${report.spending.changePct.toFixed(0)}%`,
       sub:
         report.spending.previousTotal > 0

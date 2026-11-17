@@ -8,7 +8,7 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.warn("[3am] 404 — no route for", location.pathname);
+    console.warn("[3am] 404: no route for", location.pathname);
   }, [location.pathname]);
 
   return (

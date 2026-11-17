@@ -9,7 +9,7 @@ import type { Transition, Variants } from "framer-motion";
  * curves are used for anything that simply arrives (entrances, reveals).
  */
 
-/** Editorial ease — long tail, no overshoot. Good for entrances. */
+/** Editorial ease: long tail, no overshoot. Good for entrances. */
 export const EASE_OUT = [0.16, 1, 0.3, 1] as const;
 /** Symmetric ease for state cross-fades. */
 export const EASE_IN_OUT = [0.65, 0, 0.35, 1] as const;
@@ -19,11 +19,11 @@ export const EASE_SNAP = [0.25, 1, 0.5, 1] as const;
 export const spring = {
   /** Default for interactive elements. Settles fast, barely overshoots. */
   gentle: { type: "spring", stiffness: 260, damping: 30, mass: 0.9 },
-  /** Buttons, checkboxes, chips — visible but tight bounce. */
+  /** Buttons, checkboxes, chips: visible but tight bounce. */
   snappy: { type: "spring", stiffness: 420, damping: 26, mass: 0.7 },
   /** Layout shifts, shared-element moves, panels growing. */
   layout: { type: "spring", stiffness: 320, damping: 34, mass: 0.9 },
-  /** Numbers, gauges, progress — smooth with no wobble. */
+  /** Numbers, gauges, progress: smooth with no wobble. */
   glide: { type: "spring", stiffness: 140, damping: 24, mass: 1 },
 } satisfies Record<string, Transition>;
 
@@ -84,7 +84,7 @@ export const scaleIn: Variants = {
   exit: { opacity: 0, scale: 0.97, y: 8, transition: { duration: duration.fast, ease: EASE_IN_OUT } },
 };
 
-/** Route-level transition. Deliberately subtle — navigation shouldn't shout. */
+/** Route-level transition. Deliberately subtle; navigation shouldn't shout. */
 export const pageTransition: Variants = {
   hidden: { opacity: 0, y: 12, filter: "blur(4px)" },
   visible: { opacity: 1, y: 0, filter: "blur(0px)", transition: { duration: 0.5, ease: EASE_OUT } },
@@ -95,5 +95,5 @@ export const pageTransition: Variants = {
 export const tap = { scale: 0.97 } as const;
 export const tapSoft = { scale: 0.985 } as const;
 
-/** Viewport config for scroll-reveals — fires once, slightly before in view. */
+/** Viewport config for scroll-reveals: fires once, slightly before in view. */
 export const revealViewport = { once: true, margin: "-60px" } as const;

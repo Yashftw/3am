@@ -39,7 +39,7 @@ const DEFAULT_WEIGHTS: Record<ExpenseCategory, number> = {
  * Set the month's salary and spending budget before logging anything.
  *
  * These two numbers used to be a single "Total funds" box at the bottom of
- * the page, below the charts that depend on it — you had to scroll past
+ * the page, below the charts that depend on it, so you had to scroll past
  * every derived figure to reach the input that produces them. The month now
  * starts here: state the salary, decide what you will spend, and the rest of
  * the page measures against it.
@@ -348,7 +348,7 @@ export const BudgetSetup = ({ editing = false, onDone }: Props) => {
                           type="number"
                           inputMode="numeric"
                           min="0"
-                          placeholder="—"
+                          placeholder="-"
                           value={limits[cat.name]}
                           onChange={(e) =>
                             setLimits((prev) => ({ ...prev, [cat.name]: e.target.value }))
@@ -394,7 +394,7 @@ export const BudgetSetup = ({ editing = false, onDone }: Props) => {
               exit={{ opacity: 0, height: 0 }}
               className="mt-3 overflow-hidden text-[11px] leading-relaxed text-[#FF9500]"
             >
-              You can still save this — sometimes a month genuinely runs at a loss, and the
+              You can still save this; sometimes a month genuinely runs at a loss, and the
               tracker should reflect that rather than argue with you.
             </motion.p>
           )}
@@ -413,7 +413,7 @@ export const BudgetSetup = ({ editing = false, onDone }: Props) => {
 
         {!editing && (
           <p className="mt-3 text-center text-[11px] text-muted-foreground/60">
-            You can change any of this later. Per-category limits are optional — leave them blank
+            You can change any of this later. Per-category limits are optional. Leave them blank
             to track against the month's total only.
           </p>
         )}

@@ -31,7 +31,7 @@ function writeRaw(key: string, value: string) {
   try {
     window.localStorage.setItem(key, value);
   } catch {
-    // Quota exceeded or storage blocked — keep the session alive in memory.
+    // Quota exceeded or storage blocked; keep the session alive in memory.
     memoryFallback.set(key, value);
   }
 }
@@ -55,7 +55,7 @@ export function saveLocal<T>(scope: Scope, uid: string | null | undefined, value
   try {
     writeRaw(keyFor(scope, uid), JSON.stringify(value));
   } catch {
-    /* value could not be serialised — nothing useful to do */
+    /* value could not be serialised; nothing useful to do */
   }
 }
 
@@ -101,7 +101,7 @@ export interface Identified {
  * Union a remote snapshot with whatever is cached locally.
  *
  * Remote wins for any document both sides know about. Local-only documents are
- * kept — they are almost always writes that have not round-tripped yet, and
+ * kept: they are almost always writes that have not round-tripped yet, and
  * dropping them is exactly the data loss this module exists to prevent.
  * Anything tombstoned is excluded from both sides.
  */

@@ -30,7 +30,7 @@ import { EASE_OUT, staggerContainer, fadeIn, spring, tap } from "@/lib/motion";
  * network, and needs no scrolling or navigation to be useful.
  *
  * Because a tile is only a URL, each view here can be added to the home
- * screen separately — one tile for tasks, another for training — instead of
+ * screen separately (one tile for tasks, another for training) instead of
  * forcing everything through a single summary.
  *
  * Deliberately chrome-free: no nav, no footer, nothing to tap by accident.
@@ -415,7 +415,7 @@ const TasksView = () => {
         </div>
       </Panel>
 
-      {/* Tickable straight from the tile — the one thing worth doing here. */}
+      {/* Tickable straight from the tile: the one thing worth doing here. */}
       <Panel>
         <p className="hud-label mb-3.5">Today's list</p>
         {sorted.length === 0 ? (
@@ -666,13 +666,13 @@ const OverviewView = () => {
         <div className="space-y-3.5">
           <Row
             label="Tasks"
-            value={todayTodos.length ? `${tasksDone}/${todayTodos.length}` : "—"}
+            value={todayTodos.length ? `${tasksDone}/${todayTodos.length}` : "-"}
             ratio={todayTodos.length ? tasksDone / todayTodos.length : 0}
           />
-          <Row label="Sleep" value={slept ? `${slept}h` : "—"} ratio={Math.min(slept / 8, 1)} />
+          <Row label="Sleep" value={slept ? `${slept}h` : "-"} ratio={Math.min(slept / 8, 1)} />
           <Row
             label="Budget"
-            value={s.pool > 0 ? `${Math.round(s.usedRatio * 100)}%` : "—"}
+            value={s.pool > 0 ? `${Math.round(s.usedRatio * 100)}%` : "-"}
             ratio={Math.min(s.usedRatio, 1)}
             color={s.overspent ? "#FF4060" : "#ffffff"}
           />

@@ -107,7 +107,7 @@ export default function Dashboard() {
           <span>© {now.getFullYear()} 3am</span>
           <span className="mono-font text-white/35">
             {state === "offline"
-              ? "Offline — saved on this device"
+              ? "Offline: saved on this device"
               : lastSyncedAt
                 ? `Last sync: ${relativeTime(new Date(lastSyncedAt).toISOString())}`
                 : "Ready"}

@@ -106,7 +106,7 @@ export const BudgetPanel = () => {
                     type="number"
                     min="0"
                     value={cat.budget || ""}
-                    placeholder="—"
+                    placeholder="-"
                     onChange={(e) => {
                       const val = parseFloat(e.target.value);
                       setBudget(cat.category, Number.isNaN(val) || val < 0 ? 0 : val);

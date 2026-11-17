@@ -86,7 +86,7 @@ export const CategoryLimitDialog = ({ breach, onConfirm, onRaise, onCancel }: Pr
   /*
    * Rendered into <body>. The route wrapper animates `filter`, and any
    * non-none filter makes an element the containing block for its fixed
-   * descendants — which scoped this overlay inside the page and let the
+   * descendants, which scoped this overlay inside the page and let the
    * sticky header paint over the top of it.
    */
   return createPortal(
@@ -141,7 +141,7 @@ export const CategoryLimitDialog = ({ breach, onConfirm, onRaise, onCancel }: Pr
             <p id="limit-body" className="mt-3 text-sm leading-relaxed text-muted-foreground">
               You set {formatAmount(breach.limit, 0)} for {breach.category} this month. Adding{" "}
               {formatAmount(breach.amount, 0)} takes it to{" "}
-              <span className="text-white">{formatAmount(totals.after, 0)}</span> —{" "}
+              <span className="text-white">{formatAmount(totals.after, 0)}</span>,{" "}
               <span className="text-[#FF4060]">{formatAmount(totals.over, 0)} over</span>.
             </p>
 

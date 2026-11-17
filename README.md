@@ -1,4 +1,4 @@
-# 3am — Minimalist Tracker
+# 3am - Minimalist Tracker
 
 A sleek, dark-mode-native personal tracking dashboard designed to keep your life organized without the visual clutter. Perfect for late-night planning and daily reflections.
 

@@ -22,7 +22,7 @@ import { toast } from "sonner";
 const categoryColor = (name: string) =>
   CATEGORIES.find((c) => c.name === name)?.color ?? "hsl(0 0% 50%)";
 
-/** "Today" / "Yesterday" / "Mon, Sep 15" — a date you can read at a glance. */
+/** "Today" / "Yesterday" / "Mon, Sep 15": a date you can read at a glance. */
 function dayHeading(iso: string): string {
   const today = toLocalISODate();
   if (iso === today) return "Today";

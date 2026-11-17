@@ -22,7 +22,7 @@ export function toLocalMonthKey(d: Date = new Date()): string {
 /** Turn an ISO timestamp (or date) into its local YYYY-MM-DD. */
 export function isoToLocalDate(iso: string): string {
   if (!iso) return "";
-  // Bare dates are already calendar dates — reparsing them as UTC shifts them.
+  // Bare dates are already calendar dates; reparsing them as UTC shifts them.
   if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
   const d = new Date(iso);
   return Number.isNaN(d.getTime()) ? "" : toLocalISODate(d);

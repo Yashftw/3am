@@ -775,7 +775,7 @@
  *
  * Only opacity and filter are animated here. Sonner positions stacked toasts
  * with an inline `transform`, so a keyframe that sets `transform` replaces it
- * and every toast in the stack collapses onto the same spot — which is what
+ * and every toast in the stack collapses onto the same spot, which is what
  * a first attempt at a slide-in did. Sonner keeps ownership of movement; this
  * just adds the blur burn-off the rest of the app uses.
  */

@@ -94,7 +94,7 @@ export const MonthEndPrompt = () => {
 
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
               Your spending breakdown, full ledger and progress across sleep, training,
-              tasks and objectives — collected into one PDF.
+              tasks and objectives, collected into one PDF.
             </p>
 
             {/* Headline numbers */}

@@ -154,7 +154,7 @@ class ReportCanvas {
     return this;
   }
 
-  /** Uppercase, letterspaced label — the app's `.eyebrow`. */
+  /** Uppercase, letterspaced label: the app's `.eyebrow`. */
   /**
    * Bracketed, letterspaced label - the app's `.hud-label`.
    *
@@ -1115,7 +1115,7 @@ function drawInsights(c: ReportCanvas, report: MonthlyReport) {
     suggestions.push(`Revisit the ${report.spending.overBudget[0].category} budget, or the habit behind it.`);
   }
   if (report.sleep.nightsLogged < report.daysElapsed * 0.6) {
-    suggestions.push("Log sleep more nights — the average only means something with a full picture.");
+    suggestions.push("Log sleep more nights. The average only means something with a full picture.");
   } else if (report.sleep.debtHours > 6) {
     suggestions.push("Pull bedtime earlier by 30 minutes and watch the debt close on its own.");
   }
@@ -1152,7 +1152,7 @@ export function buildReportPdf(opts: PdfOptions): jsPDF {
   const { report } = opts;
 
   c.doc.setProperties({
-    title: `3am — ${report.monthLabel} Report`,
+    title: `3am - ${report.monthLabel} Report`,
     subject: "Monthly spending and progress report",
     author: "3am",
     creator: "3am",

@@ -223,7 +223,7 @@ export default function Login() {
           >
             <p className="eyebrow mb-2">Track quietly</p>
             <p className="font-display text-xl leading-snug text-white/90">
-              Sleep, training, tasks and spending —
+              Sleep, training, tasks and spending,
               <br />
               in one place, every night.
             </p>

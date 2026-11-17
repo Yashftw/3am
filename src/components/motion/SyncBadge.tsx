@@ -24,7 +24,7 @@ export const SyncBadge = () => {
 
   const title =
     state === "offline"
-      ? "Offline — your entries are saved on this device and will sync automatically."
+      ? "Offline. Your entries are saved on this device and will sync automatically."
       : state === "error"
         ? "Couldn't reach the server. Your entries are saved locally and will retry."
         : lastSyncedAt

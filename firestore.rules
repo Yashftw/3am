@@ -11,7 +11,7 @@ rules_version = '2';
 // documents it would return. A query is only allowed if the rules can prove
 // from its constraints that it cannot read anything the caller is not
 // entitled to. The `user_id` equality filter is what makes that provable, so
-// the field name here must match the one the client filters on — a mismatch
+// the field name here must match the one the client filters on; a mismatch
 // (for example `userId` here vs `user_id` in the client) rejects the whole
 // query with permission-denied even when the collection is empty.
 //

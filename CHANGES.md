@@ -103,7 +103,7 @@ Successfully transformed the crypto portfolio dashboard into a comprehensive per
   - Uses usePortfolio() for live data
 
 #### Footer
-- Copyright: "© 2026 NORTH — All amounts stored locally."
+- Copyright: "© 2026 NORTH. All amounts stored locally."
 - Tagline: "SPEND CONSCIOUSLY · INVEST PATIENTLY"
 - Page-level GradualBlur with scroll animation
 
@@ -159,7 +159,7 @@ Successfully transformed the crypto portfolio dashboard into a comprehensive per
 - Matches dark editorial theme
 
 ### 9. Updated Metadata
-- **HTML Title**: "NORTH — Personal Finance Dashboard"
+- **HTML Title**: "NORTH - Personal Finance Dashboard"
 - **Description**: "Track expenses, manage budgets, and monitor your investment portfolio"
 - **OG Tags**: Updated for new purpose
 - **README**: Comprehensive documentation of all features

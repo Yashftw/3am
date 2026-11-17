@@ -295,7 +295,7 @@ const ExpandedObjectives = () => {
               animate={{ opacity: 1 }}
               className="flex h-[180px] w-full items-center justify-center border border-dashed border-white/10"
             >
-              <span className="text-xs text-muted-foreground">No objectives yet — add one below.</span>
+              <span className="text-xs text-muted-foreground">No objectives yet. Add one below.</span>
             </motion.div>
           )}
 
@@ -471,7 +471,7 @@ const ExpandedObjectives = () => {
       >
         <input
           type="text"
-          placeholder="Goal name ———"
+          placeholder="Goal name ___"
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground"
@@ -743,7 +743,7 @@ const ExpandedTasks = () => {
       >
         <input
           type="text"
-          placeholder="Task name ———"
+          placeholder="Task name ___"
           value={newTodo}
           onChange={(e) => setNewTodo(e.target.value)}
           className="flex-1 bg-transparent px-3 py-2.5 text-sm outline-none placeholder:text-muted-foreground"

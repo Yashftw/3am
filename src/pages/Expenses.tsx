@@ -148,7 +148,7 @@ const Expenses = () => {
 
       <footer className="mt-12 border-t border-white/5 bg-transparent px-4 py-8 md:px-12">
         <div className="mx-auto flex max-w-[1600px] flex-col items-center justify-between gap-3 text-xs text-muted-foreground md:flex-row">
-          <span>© {new Date().getFullYear()} 3am — saved on this device and synced to your account.</span>
+          <span>© {new Date().getFullYear()} 3am. Saved on this device and synced to your account.</span>
           <span className="mono-font tracking-wider">SPEND CONSCIOUSLY · INVEST PATIENTLY</span>
         </div>
       </footer>

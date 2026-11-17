@@ -292,7 +292,7 @@ const Settings = () => {
                     <p className="font-medium text-white">Saved twice, always</p>
                     <p className="mt-1 leading-relaxed text-muted-foreground">
                       Every entry is written to this device the moment you log it, then synced to your
-                      account. If you're offline, it waits in a queue and uploads itself when you're back —
+                      account. If you're offline, it waits in a queue and uploads itself when you're back,
                       even if you close the app in between.
                     </p>
                   </div>
@@ -302,7 +302,7 @@ const Settings = () => {
                   <span className="text-muted-foreground">Sync status</span>
                   <span className="mono-font text-xs uppercase tracking-wider text-white">
                     {syncState === "offline"
-                      ? "Offline — queued"
+                      ? "Offline: queued"
                       : syncState === "saving"
                         ? "Saving"
                         : syncState === "error"

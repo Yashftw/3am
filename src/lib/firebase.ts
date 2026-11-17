@@ -25,7 +25,7 @@ export const auth = getAuth(app);
 // Keep the session across full browser restarts and PWA cold starts so a
 // returning user is never bounced to /login with their data behind it.
 setPersistence(auth, browserLocalPersistence).catch(() => {
-  /* storage unavailable — fall back to the SDK default */
+  /* storage unavailable; fall back to the SDK default */
 });
 
 /**
@@ -33,7 +33,7 @@ setPersistence(auth, browserLocalPersistence).catch(() => {
  *
  * This is what makes writes durable while offline: setDoc/deleteDoc resolve
  * against the local cache immediately, queue in IndexedDB, and replay
- * automatically once the connection returns — even if the tab was closed in
+ * automatically once the connection returns, even if the tab was closed in
  * between. Reads are served from cache first, so the dashboard paints
  * instantly instead of waiting on the network.
  */
